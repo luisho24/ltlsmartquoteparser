@@ -77,32 +77,49 @@
 </div>
 
 <div class="container">
-    <div class="header-container">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <button class="toggle-btn" onclick="openSettings()" title="Settings" style="font-size: 1.2rem; padding: 4px; border: 1px solid var(--border); border-radius: 6px; background: var(--card);">⚙️</button>
-            <h1 id="mainTitle">📊 Smart LTL Quote Parser</h1>
-        </div>
-        <div class="controls-group">
-            <div class="toggle-group" title="App Interface Theme">
-                <button class="toggle-btn active" onclick="setTheme('light')" id="btn-light">☀️</button>
-                <button class="toggle-btn" onclick="setTheme('dark')" id="btn-dark">🌙</button>
+    <div class="hero-shell">
+        <div class="header-container">
+            <div class="hero-copy">
+                <div class="hero-kicker">Priority1 Workflow Tool</div>
+                <div class="hero-title-row">
+                    <button class="hero-settings-btn" onclick="openSettings()" title="Settings">⚙️</button>
+                    <div>
+                        <h1 id="mainTitle">📊 Smart LTL Quote Parser</h1>
+                        <p class="hero-subtitle">Parse exported quotes, validate carrier rules, compare options, and prepare polished client-ready results.</p>
+                    </div>
+                </div>
             </div>
-            <div class="toggle-group">
-                <button class="toggle-btn" onclick="setLang('es')" id="btn-es">ES</button>
-                <button class="toggle-btn active" onclick="setLang('en')" id="btn-en">EN</button>
+            <div class="controls-group hero-controls">
+                <div class="control-card">
+                    <span class="control-card-label">Mode</span>
+                    <div class="toggle-group" title="App Interface Theme">
+                        <button class="toggle-btn active" onclick="setTheme('light')" id="btn-light">☀️</button>
+                        <button class="toggle-btn" onclick="setTheme('dark')" id="btn-dark">🌙</button>
+                    </div>
+                </div>
+                <div class="control-card">
+                    <span class="control-card-label">Language</span>
+                    <div class="toggle-group">
+                        <button class="toggle-btn" onclick="setLang('es')" id="btn-es">ES</button>
+                        <button class="toggle-btn active" onclick="setLang('en')" id="btn-en">EN</button>
+                    </div>
+                </div>
+                <div class="control-card control-card-select">
+                    <span class="control-card-label">Theme</span>
+                    <select id="appThemeSelect" class="theme-select" onchange="setAppTheme(this.value)">
+                        <option value="default" id="appThmDef">🎨 Default Theme</option>
+                        <option value="monochrome" id="appThmMono">⚫ Monochrome</option>
+                        <option value="vivid" id="appThmViv">🌈 Vivid</option>
+                        <option value="feminine" id="appThmFem">🌸 Feminine</option>
+                        <option value="navy" id="appThmNav">🌌 Navy</option>
+                        <option value="corporate" id="appThmCorp">🏢 Corporate</option>
+                        <option value="forest" id="appThmFor">🌲 Forest</option>
+                        <option value="earth" id="appThmEar">🟤 Earthy</option>
+                        <option value="midnight" id="appThmMid">🌙 Midnight</option>
+                        <option value="slate" id="appThmSla">📓 Slate</option>
+                    </select>
+                </div>
             </div>
-            <select id="appThemeSelect" class="theme-select" onchange="setAppTheme(this.value)">
-                <option value="default" id="appThmDef">🎨 Default Theme</option>
-                <option value="monochrome" id="appThmMono">⚫ Monochrome</option>
-                <option value="vivid" id="appThmViv">🌈 Vivid</option>
-                <option value="feminine" id="appThmFem">🌸 Feminine</option>
-                <option value="navy" id="appThmNav">🌌 Navy</option>
-                <option value="corporate" id="appThmCorp">🏢 Corporate</option>
-                <option value="forest" id="appThmFor">🌲 Forest</option>
-                <option value="earth" id="appThmEar">🟤 Earthy</option>
-                <option value="midnight" id="appThmMid">🌙 Midnight</option>
-                <option value="slate" id="appThmSla">📓 Slate</option>
-            </select>
         </div>
     </div>
 
@@ -113,7 +130,7 @@
 
     <div id="view-analyzer" class="tab-pane active">
         <div class="grid">
-            <div class="panel input-section">
+            <div class="panel input-section panel-elevated">
                 <h3 id="step1Title">1. Quote Data Input</h3>
                 <textarea id="inputData" placeholder="Paste your full quote text here (Quote Id, From, To, Items, Rates)..."></textarea>
 
@@ -175,8 +192,8 @@
             <div class="results-section">
                 <div id="quoteSummaryContainer"></div>
 
-                <div class="panel" style="padding: 0; overflow: hidden;">
-                    <div class="toolbar-wrapper" style="padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--table-header); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div class="panel panel-elevated panel-results" style="padding: 0; overflow: hidden;">
+                    <div class="toolbar-wrapper results-toolbar" style="padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--table-header); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <div class="toolbar-group" style="display: flex; gap: 12px; align-items: center;">
                             <h3 style="margin:0; border:none; padding:0;" id="resultCount">Results</h3>
                             <select id="sortFilter" onchange="renderTable()" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.8rem; background: var(--card); color: var(--text); outline: none;">
