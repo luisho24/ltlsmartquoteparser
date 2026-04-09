@@ -7,6 +7,89 @@ function switchTab(tabId) {
 
 function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
 function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+function openBugReport() {
+    const typeEl = document.getElementById('bugType');
+    const titleEl = document.getElementById('bugTitle');
+    const summaryEl = document.getElementById('bugSummary');
+    const stepsEl = document.getElementById('bugSteps');
+    const quoteId = appQuotes[0] ? appQuotes[0].id : 'no-quote';
+
+    if (typeEl && !typeEl.value) typeEl.value = 'Bug Report';
+    if (titleEl && !titleEl.value.trim()) titleEl.value = `Bug report: ${quoteId}`;
+    if (summaryEl && !summaryEl.value.trim()) summaryEl.value = 'Observed behavior:\n\nExpected behavior:\n';
+    if (stepsEl && !stepsEl.value.trim()) stepsEl.value = '1.\n2.\n3.\n';
+
+    updateBugReportPreview();
+    document.getElementById('bugReportModal').style.display = 'flex';
+}
+function closeBugReport() { document.getElementById('bugReportModal').style.display = 'none'; }
+
+function getBugReportContext() {
+    const currentQuote = appQuotes[0] || null;
+    const inputData = document.getElementById('inputData') ? document.getElementById('inputData').value.trim() : '';
+    return {
+        page: window.location.href,
+        quoteId: currentQuote ? currentQuote.id : '-',
+        totalQuotes: appQuotes.length,
+        totalRates: currentQuote ? currentQuote.rawRates.length : 0,
+        lang: currentLang,
+        themeMode: document.documentElement.getAttribute('data-theme') || 'light',
+        appTheme: document.documentElement.getAttribute('data-app-theme') || 'default',
+        batchMode: !!document.getElementById('batchMode')?.checked,
+        splitRates: !!document.getElementById('separateRateTypes')?.checked,
+        destinationType: document.getElementById('destFilter') ? document.getElementById('destFilter').value : 'standard',
+        productType: document.getElementById('productFilter') ? document.getElementById('productFilter').value : 'none',
+        insurance: document.getElementById('insuranceInput') ? (document.getElementById('insuranceInput').value || '0') : '0',
+        userAgent: navigator.userAgent,
+        inputSnippet: inputData ? inputData.slice(0, 1800) : '(empty)'
+    };
+}
+
+function getBugReportBody() {
+    const type = document.getElementById('bugType') ? document.getElementById('bugType').value : 'Bug Report';
+    const title = document.getElementById('bugTitle') ? document.getElementById('bugTitle').value.trim() : '';
+    const summary = document.getElementById('bugSummary') ? document.getElementById('bugSummary').value.trim() : '';
+    const steps = document.getElementById('bugSteps') ? document.getElementById('bugSteps').value.trim() : '';
+    const ctx = getBugReportContext();
+
+    return `## Type\n${type}\n\n## Summary\n${summary || '(not provided)'}\n\n## Steps To Reproduce\n${steps || '(not provided)'}\n\n## Context\n- Page: ${ctx.page}\n- Quote ID: ${ctx.quoteId}\n- Total Quotes: ${ctx.totalQuotes}\n- Total Rates: ${ctx.totalRates}\n- Lang: ${ctx.lang}\n- Theme Mode: ${ctx.themeMode}\n- App Theme: ${ctx.appTheme}\n- Batch Mode: ${ctx.batchMode}\n- Split LTL/Volume: ${ctx.splitRates}\n- Destination Type: ${ctx.destinationType}\n- Product Type: ${ctx.productType}\n- Insurance: ${ctx.insurance}\n- User Agent: ${ctx.userAgent}\n\n## Input Snippet\n\`\`\`\n${ctx.inputSnippet}\n\`\`\`\n`;
+}
+
+function updateBugReportPreview() {
+    const previewEl = document.getElementById('bugContextPreview');
+    if (!previewEl) return;
+    previewEl.value = getBugReportBody();
+}
+
+function copyBugReport() {
+    updateBugReportPreview();
+    const previewEl = document.getElementById('bugContextPreview');
+    if (!previewEl) return;
+    previewEl.select();
+    document.execCommand('copy');
+}
+
+function openBugForm() {
+    updateBugReportPreview();
+    const type = document.getElementById('bugType') ? document.getElementById('bugType').value : 'Bug Report';
+    const title = document.getElementById('bugTitle') ? document.getElementById('bugTitle').value.trim() : 'Bug report';
+    const summary = document.getElementById('bugSummary') ? document.getElementById('bugSummary').value.trim() : '';
+    const steps = document.getElementById('bugSteps') ? document.getElementById('bugSteps').value.trim() : '';
+    const ctx = getBugReportContext();
+    const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfBcTikuEWK6CHO-FZA0fkYz9I9C6_Z1iNlCcG_Hyftitx1Xw/viewform';
+    const params = new URLSearchParams({
+        usp: 'pp_url',
+        'entry.795436905': type
+    });
+
+    if (ctx.quoteId && ctx.quoteId !== '-') params.set('entry.471983136', ctx.quoteId);
+    if (title) params.set('entry.665657255', title);
+    if (summary) params.set('entry.225432930', summary);
+    if (steps) params.set('entry.1985306182', steps);
+    params.set('entry.1468428181', getBugReportBody());
+
+    window.open(`${baseUrl}?${params.toString()}`, '_blank', 'noopener');
+}
 
 function toggleExperimental(isEnabled) {
     if (isEnabled) {

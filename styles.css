@@ -63,7 +63,10 @@ h1 { margin: 0; font-size: 1.85rem; color: var(--hero-text); letter-spacing: -0.
 .hero-controls { justify-content: flex-end; align-items: stretch; gap: 10px; }
 .control-card { min-width: 110px; padding: 10px; border-radius: 16px; background: var(--hero-soft); border: 1px solid var(--hero-border); backdrop-filter: blur(10px); }
 .control-card-select { min-width: 180px; }
+.control-card-action { min-width: 150px; }
 .control-card-label { display: block; margin-bottom: 8px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: color-mix(in srgb, var(--hero-muted) 90%, transparent); }
+.hero-action-btn { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--hero-border); background: color-mix(in srgb, var(--hero-soft) 78%, #ffffff 22%); color: var(--hero-text); font-weight: 700; cursor: pointer; }
+.hero-action-btn:hover { transform: translateY(-1px); }
 
 .toggle-group { display: flex; background: rgba(255,255,255,0.9); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.4); flex-grow: 1; }
 .toggle-btn { background: none; border: none; padding: 8px 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; color: var(--text-muted); transition: all 0.2s; flex: 1; text-align: center; }
@@ -75,6 +78,10 @@ body:not(.show-experimental) .exp-feature { display: none !important; }
 
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); display: flex; justify-content: center; align-items: center; z-index: 2000; animation: fadeIn 0.2s; }
 .modal-content { width: 90%; max-width: 400px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); background: var(--card); padding: 16px; border-radius: 8px; }
+.bug-report-intro { margin: 0 0 14px; color: var(--text-muted); font-size: 0.84rem; }
+.bug-textarea { min-height: 110px; height: auto; }
+.bug-context-preview { min-height: 180px; font-size: 0.78rem; }
+.bug-report-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 
 .color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .color-item { display: flex; flex-direction: column; gap: 4px; }
