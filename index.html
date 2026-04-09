@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart LTL Quote Analyzer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body onload="initApp()">
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content panel" style="max-height: 90vh; overflow-y: auto;">
+        <h3 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
+            <span>⚙️ Settings</span>
+            <button onclick="closeSettings()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text);">✖</button>
+        </h3>
+
+        <div class="checkbox-group" style="margin-bottom: 16px; border: 1px solid var(--primary); background: var(--toggle-bg);">
+            <input type="checkbox" id="expToggle" onchange="toggleExperimental(this.checked)">
+            <label for="expToggle" style="font-weight: bold; color: var(--primary);">Enable Experimental Features</label>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0; margin-bottom: 16px; line-height: 1.3;">
+            Unlocks Batch Mode, PDF/CSV Exports, Destination Types, Commodities, Additional Insurance, and strict Rule Checks.
+        </p>
+
+        <h4 style="margin: 16px 0 8px 0; border-bottom: 1px solid var(--border); padding-bottom: 4px; color: var(--text);">🎨 Email Custom Branding</h4>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0; margin-bottom: 12px; line-height: 1.3;">
+            Edit colors below to automatically trigger the Live Preview.
+        </p>
+
+        <div class="color-grid">
+            <div class="color-item">
+                <label>Primary Color</label>
+                <input type="color" id="cPrimary" value="#2563eb" oninput="handleColorChange()">
+            </div>
+            <div class="color-item">
+                <label>Table Header</label>
+                <input type="color" id="cHeader" value="#f1f5f9" oninput="handleColorChange()">
+            </div>
+            <div class="color-item">
+                <label>Background</label>
+                <input type="color" id="cBg" value="#ffffff" oninput="handleColorChange()">
+            </div>
+            <div class="color-item">
+                <label>Text Color</label>
+                <input type="color" id="cText" value="#333333" oninput="handleColorChange()">
+            </div>
+            <div class="color-item">
+                <label>Border</label>
+                <input type="color" id="cBorder" value="#cbd5e1" oninput="handleColorChange()">
+            </div>
+            <div class="color-item">
+                <label>Accent (Headers)</label>
+                <input type="color" id="cAcc" value="#166534" oninput="handleColorChange()">
+            </div>
+        </div>
+
+        <button class="primary-btn" style="width: 100%; margin-top: 16px;" onclick="closeSettings()">Done</button>
+    </div>
+</div>
+
+<!-- Email Preview Modal -->
+<div id="emailPreviewModal" class="modal-overlay" style="display: none; z-index: 2500;">
+    <div class="modal-content panel preview-panel" style="width: 95%; max-width: 850px; height: 90vh; display: flex; flex-direction: column;">
+        <h3 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+            <span>👁️ Live Email Preview</span>
+            <button onclick="closeEmailPreview()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text);">✖</button>
+        </h3>
+        <div id="previewContainer" style="flex-grow: 1; overflow-y: auto; background: #e2e8f0; padding: 20px; border-radius: 6px; display: flex; justify-content: center;"></div>
+        <div style="flex-shrink: 0; padding-top: 12px; display: flex; gap: 12px;">
+            <button class="secondary-btn" style="flex:1;" onclick="closeEmailPreview()">Close Preview</button>
+            <button class="primary-btn" style="flex:1;" onclick="copyForEmailFromPreview()">📋 Copy This Design</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div id="remoteAnnouncement" class="remote-banner" style="display:none;"></div>
+    <div id="remoteKillSwitch" class="remote-kill" style="display:none;"></div>
+    <div class="header-container">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="toggle-btn" onclick="openSettings()" title="Settings" style="font-size: 1.2rem; padding: 4px; border: 1px solid var(--border); border-radius: 6px; background: var(--card);">⚙️</button>
+            <h1 id="mainTitle">📊 Smart LTL Quote Parser</h1>
+        </div>
+        <div class="controls-group">
+            <div class="toggle-group" title="App Interface Theme">
+                <button class="toggle-btn active" onclick="setTheme('light')" id="btn-light">☀️</button>
+                <button class="toggle-btn" onclick="setTheme('dark')" id="btn-dark">🌙</button>
+            </div>
+            <div class="toggle-group">
+                <button class="toggle-btn" onclick="setLang('es')" id="btn-es">ES</button>
+                <button class="toggle-btn active" onclick="setLang('en')" id="btn-en">EN</button>
+            </div>
+            <select id="appThemeSelect" class="theme-select" onchange="setAppTheme(this.value)">
+                <option value="default" id="appThmDef">🎨 Default Theme</option>
+                <option value="monochrome" id="appThmMono">⚫ Monochrome</option>
+                <option value="vivid" id="appThmViv">🌈 Vivid</option>
+                <option value="feminine" id="appThmFem">🌸 Feminine</option>
+                <option value="navy" id="appThmNav">🌌 Navy</option>
+                <option value="corporate" id="appThmCorp">🏢 Corporate</option>
+                <option value="forest" id="appThmFor">🌲 Forest</option>
+                <option value="earth" id="appThmEar">🟤 Earthy</option>
+                <option value="midnight" id="appThmMid">🌙 Midnight</option>
+                <option value="slate" id="appThmSla">📓 Slate</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="tabs-nav">
+        <button class="tab-btn active" id="btn-tab-analyzer" onclick="switchTab('analyzer')">Parser</button>
+        <button class="tab-btn" id="btn-tab-extras" onclick="switchTab('extras')">Extras</button>
+    </div>
+
+    <div id="view-analyzer" class="tab-pane active">
+        <div class="grid">
+            <div class="panel input-section">
+                <h3 id="step1Title">1. Quote Data Input</h3>
+                <textarea id="inputData" placeholder="Paste your full quote text here (Quote Id, From, To, Items, Rates)..."></textarea>
+
+                <div class="filter-group" style="margin-bottom: 12px;">
+                    <label id="insLabel" style="font-size: 0.8rem; color: var(--text-muted); font-weight: bold; margin-bottom: 4px; display: block;">Additional Insurance ($):</label>
+                    <input type="number" id="insuranceInput" placeholder="0.00" min="0" step="0.01" oninput="handleInsuranceInput()" style="padding: 6px 10px;">
+                    <div id="insuranceReminder" class="insurance-reminder">Reminder: calculate Insurance first in CABO (Priority1 calculator).</div>
+                    <div id="insuranceAlert" class="insurance-alert" style="display:none;"></div>
+                </div>
+
+                <div class="btn-group-input">
+                    <button class="primary-btn" onclick="processData()" id="analyzeBtn">Parse Quote</button>
+                    <button class="secondary-btn" onclick="clearData()" id="clearBtn">Clear</button>
+                    <button class="danger-btn exp-feature" onclick="clearAllData()" id="clearAllBtn" style="display: none;">Clear All</button>
+                </div>
+
+                <div class="checkbox-group no-bg" style="display: flex; gap: 12px; flex-direction: column;">
+                    <label style="color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                        <input type="checkbox" id="autoCopyPaste" checked>
+                        <span id="lblAutoCopy">Auto-Parse & Copy on Paste</span>
+                    </label>
+                    <label class="exp-feature" style="color: var(--warning); font-weight: 600; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                        <input type="checkbox" id="batchMode" onchange="toggleBatchMode()">
+                        <span id="lblBatchMode">Batch Quote Mode</span>
+                    </label>
+                </div>
+
+                <div class="filters exp-feature">
+                    <h3 id="step2Title">2. Rules & Filters</h3>
+                    <div class="filter-group exp-feature">
+                        <label id="destLabel">Destination Type:</label>
+                        <select id="destFilter" onchange="updateFilters()">
+                            <option value="standard" id="optStd">🏢 Standard Commercial</option>
+                            <option value="amazon">📦 Amazon FBA</option>
+                            <option value="walmart">🛒 Walmart DC</option>
+                        </select>
+                    </div>
+                    <div class="filter-group exp-feature">
+                        <label id="prodLabel">Special Commodity:</label>
+                        <select id="productFilter" onchange="updateFilters()">
+                            <option value="none" id="optNone">📦 General / FAK</option>
+                            <option value="tobacco" id="optTob">🚬 Tobacco / Cigarettes</option>
+                            <option value="alcohol" id="optAlc">🍷 Alcohol</option>
+                            <option value="vape" id="optVap">💨 Vape Products</option>
+                            <option value="firearms" id="optFire">🔫 Firearms / Ammunition</option>
+                        </select>
+                    </div>
+                    <div class="checkbox-group exp-feature" style="margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px;">
+                        <input type="checkbox" id="liftgateFilter" onchange="updateFilters()">
+                        <label for="liftgateFilter" id="liftLabel">Force Liftgate Rule Warning</label>
+                    </div>
+                    <div class="checkbox-group exp-feature">
+                        <input type="checkbox" id="cubicFilter" onchange="updateFilters()">
+                        <label for="cubicFilter" id="cubicLabel">Overlength / Cubic Capacity Rule Applies</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div id="quoteSummaryContainer"></div>
+
+                <div class="panel" style="padding: 0; overflow: hidden;">
+                    <div class="toolbar-wrapper" style="padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--table-header); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <div class="toolbar-group" style="display: flex; gap: 12px; align-items: center;">
+                            <h3 style="margin:0; border:none; padding:0;" id="resultCount">Results</h3>
+                            <select id="sortFilter" onchange="renderTable()" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.8rem; background: var(--card); color: var(--text); outline: none;">
+                                <option value="cheapest" id="optSortCheap">Sort: Cheapest</option>
+                                <option value="fastest" id="optSortFast">Sort: Fastest</option>
+                            </select>
+                        </div>
+                        <div class="toolbar-export-options" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                            <div class="toolbar-checkboxes" style="display: flex; gap: 12px; align-items: center;">
+                                <div id="internalColsFilters" style="display:none; gap: 12px; padding-left: 12px; border-left: 1px solid var(--border);">
+                                    <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--primary);">
+                                        <input type="checkbox" id="exportCarrierCost" onchange="renderTable()">
+                                        <span id="lblCarrierCost">Carrier Cost</span>
+                                    </label>
+                                    <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--primary);">
+                                        <input type="checkbox" id="exportMargin" onchange="renderTable()">
+                                        <span id="lblMargin">Margin</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; align-items:center; gap:4px;" class="theme-dropdown-wrapper">
+                                <span id="lblEmailTheme" style="font-size:0.75rem; font-weight:bold; color:var(--primary);" class="hide-mobile">Email Theme:</span>
+                                <select id="emailTheme" class="email-theme-select" onchange="if(this.value === 'custom') { openSettings(); } else { renderTable(); }">
+                                    <option value="default" id="thmDef">🎨 Default</option>
+                                    <option value="monochrome" id="thmMono">⚫ Monochrome</option>
+                                    <option value="vivid" id="thmViv">🌈 Vivid</option>
+                                    <option value="feminine" id="thmFem">🌸 Feminine</option>
+                                    <option value="navy" id="thmNav">🌌 Navy</option>
+                                    <option value="corporate" id="thmCorp">🏢 Corporate</option>
+                                    <option value="forest" id="thmFor">🌲 Forest</option>
+                                    <option value="earth" id="thmEar">🟤 Earthy</option>
+                                    <option value="midnight" id="thmMid">🌙 Midnight</option>
+                                    <option value="slate" id="thmSla">📓 Slate</option>
+                                    <option value="custom" id="thmCustom" style="font-weight: bold;">🖌️ Custom...</option>
+                                </select>
+                            </div>
+
+                            <div class="toolbar-export-btns" style="display: flex; gap: 8px;">
+                                <button class="secondary-btn" id="previewEmailBtn" onclick="openEmailPreview()" disabled>👁️ Preview</button>
+                                <button class="primary-btn" style="width: auto; padding: 6px 12px; font-size: 0.85rem;" id="copyBtn" onclick="copyForEmail()" disabled>📋 Copy for Email</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="quotesTable">
+                            <thead>
+                                <tr id="tableHeadersRow">
+                                    <th id="thCarrier">Carrier</th>
+                                    <th id="thRate">Rate</th>
+                                    <th id="thLiability">Liability</th>
+                                    <th id="thTransit">Transit</th>
+                                    <th id="thNotes">Notes & Rules</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="8">
+                                        <div class="empty-state" id="emptyText" style="color: var(--text-muted);">
+                                            Paste quote data in the left panel and click Parse.
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="disclaimer-footer" id="disclaimerText">
+                    ⚠️ <strong>Important Notice:</strong> This tool provides recommendations based on predefined rules. Always double-check information and requirements based on client requests and updated carrier tariffs.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-extras" class="tab-pane">
+        <div class="grid" style="grid-template-columns: 1fr; max-width: 900px; margin: 0 auto;">
+            <div class="panel">
+                <h3 id="extHazTitle">☢️ Hazmat / NMFC Quick Search</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;" id="extHazDesc">Quickly search for Hazmat classes, common NMFC numbers, or UN# without leaving the tool.</p>
+                <input type="text" id="hazmatSearch" placeholder="Ex. 1203, UN1203, Explosives, Batteries..." onkeyup="searchHazmat()" style="width: 100%;">
+                <div id="hazmatResults" style="max-height: 500px; overflow-y: auto; margin-top: 16px; padding: 0 4px;"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div id="copyToast" class="toast-notification">
+    <span>✅</span> <span id="toastMsg">Copied to clipboard!</span>
+</div>
+
+<script src="./script.js"></script>
+</body>
+</html>
