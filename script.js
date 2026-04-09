@@ -354,10 +354,73 @@ function getCarrierLogo(normalizedName) {
     const baseUrl = (remoteConfig.customIconsUrl || defaultRemoteConfig.customIconsUrl).replace(/\/+$/, '/');
     const n = normalizedName.toLowerCase();
     const iconMap = {
-        'aaa cooper': 'aaa-cooper.png', 'abf': 'abf.png', 'averitt express': 'averitt.png', 'southeastern freight': 'southeastern-freight.png', 'old dominion': 'old-dominion-freight-line.png', 'xpo': 'xpo.png', 'tforce': 'tforce-freight.png', 'fedex economy': 'fedex-economy.png', 'fedex priority': 'fedex-priority.png', 'fedex': 'fedex-priority.png', 'ward': 'ward-trucking.png', 'saia': 'saia.png', 'r&l carriers': 'r-l-carriers.png', 'estes': 'estes.png', 'central transport': 'central-transport.png', 'dayton freight': 'dayton-freight-lines.png', 'a. duie pyle': 'a-duie-pyle.png', 'pitt ohio': 'pitt-ohio.png', 'custom companies': 'custom-companies.png', 'frontline': 'frontline-freight.png', 'daylight': 'daylight-transport.png', 'forward air': 'forward.png', 'roadrunner': 'roadrunner-transportation-systems.png', 'unis transportation': 'unis-transportation.png', 'n&m transfer': 'n-m-transfer.png', 'cross country': 'cross-country-freight-solutions.png', 'dohrn transfer': 'dohrn-transfer.png', 'magnum': 'magnum.png', 'a & b freight line': 'a-b-freight-line.png', 'double d express': 'double-d-express.png', 'fort transportation': 'fort-transportation.png', 'performance freight': 'performance-freight-systems-inc.png', 'rude transportation': 'rude-transportation.png', 'southwestern motor transport': 'southwestern-motor-transport.png', 'tax airfreight': 'tax-airfreight.png', 'go2 logistics': 'go2-logistics.png', 'oak harbor freight lines': 'oak-harbor-freight.png', 'dugan': 'dugan-truck-line.png', 'total transportation': 'total-transportation-distribution.png'
+        'aaa cooper': 'aaa-cooper.png',
+        'abf': 'abf.png',
+        'abf freight': 'abf-freight.png',
+        'aberdeen express': 'aberdeen-express.png',
+        'a. duie pyle': 'a-duie-pyle.png',
+        'a & b freight line': 'a-b-freight-line.png',
+        'accurate cargo': 'accurate-transport.png',
+        'accurate transport': 'accurate-transport.png',
+        'averitt': 'averitt.png',
+        'averitt express': 'averitt-express.png',
+        'central transport': 'central-transport.png',
+        'cross country': 'cross-country-freight-solutions.png',
+        'cross country freight solutions': 'cross-country-freight-solutions.png',
+        'custom companies': 'custom-companies.png',
+        'daylight': 'daylight-transport.png',
+        'daylight transport': 'daylight-transport.png',
+        'dayton freight': 'dayton-freight-lines.png',
+        'dohrn transfer': 'dohrn-transfer.png',
+        'double d express': 'double-d-express.png',
+        'dugan': 'dugan-truck-line.png',
+        'estes': 'estes.png',
+        'fedex': 'fedex-priority.png',
+        'fedex economy': 'fedex-economy.png',
+        'fedex priority': 'fedex-priority.png',
+        'forward': 'forward.png',
+        'forward air': 'forward.png',
+        'frontline': 'frontline-freight.png',
+        'frontline freight': 'frontline-freight.png',
+        'fort transportation': 'fort-transportation.png',
+        'go2 logistics': 'go2-logistics.png',
+        'magnum': 'magnum.png',
+        'n&m transfer': 'n-m-transfer.png',
+        'nm transfer': 'n-m-transfer.png',
+        'oak harbor freight lines': 'oak-harbor-freight.png',
+        'old dominion': 'old-dominion-freight-line.png',
+        'old dominion freight line': 'old-dominion-freight-line.png',
+        'performance freight': 'performance-freight-systems-inc.png',
+        'performance freight systems': 'performance-freight-systems-inc.png',
+        'pitt ohio': 'pitt-ohio.png',
+        'r&l carriers': 'r-l-carriers.png',
+        'r+l carriers': 'r-l-carriers.png',
+        'rl carriers': 'r-l-carriers.png',
+        'roadrunner': 'roadrunner-transportation-systems.png',
+        'rude transportation': 'rude-transportation.png',
+        'saia': 'saia.png',
+        'saia ltl freight': 'saia-ltl-freight.png',
+        'southeastern freight': 'southeastern-freight.png',
+        'southwestern motor transport': 'southwestern-motor-transport.png',
+        'tax airfreight': 'tax-airfreight.png',
+        'tforce': 'tforce-freight.png',
+        'tforce freight': 'tforce-freight.png',
+        'total transportation': 'total-transportation-distribution.png',
+        'unis': 'unis-transportation.png',
+        'unis transportation': 'unis-transportation.png',
+        'ward': 'ward-trucking.png',
+        'ward trucking': 'ward-trucking.png',
+        'xpo': 'xpo.png'
     };
     if (iconMap[n]) return baseUrl + iconMap[n];
-    return baseUrl + n.replace(/[^a-z0-9]+/g, '-') + '.png';
+
+    const fallbackCandidates = [
+        n.replace(/[^a-z0-9]+/g, '-') + '.png',
+        n.replace(/\bfreight\b/g, '').replace(/\bltl\b/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '.png',
+        n.replace(/\bline\b/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '.png'
+    ].filter(Boolean);
+
+    return baseUrl + fallbackCandidates[0];
 }
 
 const rules = {
@@ -512,6 +575,55 @@ function extractTransitDays(line) {
     return 'N/A';
 }
 
+function parseTabSeparatedRateLine(line, rateType, hasInternalCols) {
+    const cols = line.split('\t').map(part => part.trim()).filter(Boolean);
+    if (cols.length < 5 || !cols.some(col => col.includes('$'))) return null;
+
+    const carrier = cols[0] || 'Unknown';
+    const customerRateCol = cols.find(col => /^\$[0-9,.]+$/.test(col));
+    if (!customerRateCol) return null;
+
+    const customerCost = parseFloat(customerRateCol.replace(/[$,]/g, '')) || 0;
+    const moneyCols = cols.filter(col => /^\$[0-9,.]+$/.test(col));
+    const carrierCost = hasInternalCols && moneyCols.length > 1 ? parseFloat(moneyCols[1].replace(/[$,]/g, '')) : '';
+
+    const quoteNumber = cols.find((col, idx) => idx > 0 && /[A-Z0-9_-]{5,}/i.test(col) && /\d/.test(col) && !col.includes('$') && !col.includes('/')) || '-';
+
+    const liabilityCol = cols.find(col => /^\$[0-9,.]+\s*\/\s*\$[0-9,.]+$/i.test(col) || /^NEW:/i.test(col)) || '-';
+    let liability = '-';
+    if (liabilityCol !== '-') {
+        const slashMatch = liabilityCol.match(/\$?([0-9,.]+)\s*\/\s*\$?([0-9,.]+)/);
+        if (slashMatch) {
+            liability = `${slashMatch[1]}/${slashMatch[2]}`;
+        } else {
+            const newLiabMatch = liabilityCol.match(/NEW:\s*\$?([0-9,.]+)/i);
+            const usedLiabMatch = liabilityCol.match(/USED:\s*\$?([0-9,.]+)/i);
+            if (newLiabMatch) liability = newLiabMatch[1] + (usedLiabMatch ? `/${usedLiabMatch[1]}` : '');
+        }
+    }
+
+    const service = cols.find(col => /(Standard Rate|Economy|Priority|LTL Standard Transit|Market Rate|Standard Service|Standard|Interline|TLX|TLS|EXCL|Guaranteed)/i.test(col)) || 'Standard';
+    const expiration = cols.find(col => /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(col)) || '-';
+    const margin = cols.find(col => /^\d+(?:\.\d+)?%$/.test(col)) || '-';
+    const daysCol = [...cols].reverse().find(col => /^\d{1,3}$/.test(col) || /^\d{1,3}\s*Days?$/i.test(col));
+    const days = daysCol ? extractTransitDays(daysCol) : extractTransitDays(line);
+
+    return {
+        id: Math.random().toString(36).substr(2, 9),
+        carrier,
+        cost: customerCost,
+        carrierCost,
+        margin,
+        expiration,
+        quoteNumber,
+        liability,
+        service,
+        days,
+        rateType,
+        isSelected: true
+    };
+}
+
 function processData() {
     let rawText = document.getElementById('inputData').value;
     if (!rawText.trim()) return;
@@ -630,6 +742,13 @@ function processData() {
             }
         } else if (mode === 'rates') {
             if (/carrier\s*service\s*level/i.test(lowerLine) || /customer\s*cost/i.test(lowerLine) || /carrier\s*quote/i.test(lowerLine) || (lowerLine.includes('carrier') && lowerLine.includes('rate'))) continue;
+
+            const tabParsedRate = parseTabSeparatedRateLine(line, currentRateType, q.hasInternalCols);
+            if (tabParsedRate) {
+                q.rawRates.push(tabParsedRate);
+                continue;
+            }
+
             if (line.includes('$')) {
                 line = line.replace(/(\$[0-9,]+\.\d{2})(\d{1,3})(?=\s*Days?\b)/i, '$1 $2');
 
