@@ -104,86 +104,6 @@ function loadCustomColors() {
     } catch (e) {}
 }
 
-const defaultRemoteConfig = {
-    isActive: true,
-    killSwitchMessage: '',
-    announcement: { show: false, message: '', type: 'info' },
-    features: { batchMode: true },
-    customIconsUrl: './logos/'
-};
-
-let remoteConfig = { ...defaultRemoteConfig };
-
-async function loadRemoteConfig() {
-    const sources = [
-        './config.json',
-        'https://raw.githubusercontent.com/luisho24/quotool/main/config.js'
-    ];
-
-    for (const url of sources) {
-        try {
-            const res = await fetch(url, { cache: 'no-store' });
-            if (!res.ok) continue;
-            const text = await res.text();
-            const parsed = JSON.parse(text);
-            remoteConfig = {
-                ...defaultRemoteConfig,
-                ...parsed,
-                announcement: { ...defaultRemoteConfig.announcement, ...(parsed.announcement || {}) },
-                features: { ...defaultRemoteConfig.features, ...(parsed.features || {}) }
-            };
-            break;
-        } catch (e) {}
-    }
-
-    applyRemoteConfig();
-}
-
-function applyRemoteConfig() {
-    const banner = document.getElementById('remoteAnnouncement');
-    const kill = document.getElementById('remoteKillSwitch');
-    const parseBtn = document.getElementById('analyzeBtn');
-    const batchModeEl = document.getElementById('batchMode');
-    const batchLabel = document.getElementById('lblBatchMode');
-
-    if (banner && remoteConfig.announcement && remoteConfig.announcement.show && remoteConfig.announcement.message) {
-        banner.className = `remote-banner ${remoteConfig.announcement.type || 'info'}`;
-        banner.textContent = remoteConfig.announcement.message;
-        banner.style.display = 'block';
-    } else if (banner) {
-        banner.style.display = 'none';
-    }
-
-    if (!remoteConfig.isActive) {
-        if (kill) {
-            kill.textContent = remoteConfig.killSwitchMessage || 'This tool is temporarily unavailable.';
-            kill.style.display = 'block';
-        }
-        if (parseBtn) {
-            parseBtn.disabled = true;
-            parseBtn.title = 'Disabled by remote configuration';
-        }
-    } else {
-        if (kill) kill.style.display = 'none';
-        if (parseBtn) {
-            parseBtn.disabled = false;
-            parseBtn.title = '';
-        }
-    }
-
-    if (batchModeEl) {
-        const batchEnabled = !(remoteConfig.features && remoteConfig.features.batchMode === false);
-        batchModeEl.disabled = !batchEnabled;
-        if (!batchEnabled && batchModeEl.checked) {
-            batchModeEl.checked = false;
-            toggleBatchMode();
-        }
-        if (batchLabel && !batchEnabled) {
-            batchLabel.textContent = `${dict[currentLang].lblBatchMode} (disabled by config)`;
-        }
-    }
-}
-
 const dict = {
     es: {
         mainTitle: "📊 Parser Inteligente de Cotizaciones LTL",
@@ -282,7 +202,6 @@ function setLang(lang) {
         updateSummaryUI();
         renderTable();
     }
-    applyRemoteConfig();
     validateInsuranceAmount();
     searchHazmat();
 }
@@ -322,7 +241,7 @@ function startLiveClocks() {
     clockInterval = setInterval(updateClocks, 60000);
 }
 
-async function initApp() {
+function initApp() {
     try {
         const savedMode = localStorage.getItem('ltl-theme-mode');
         if (savedMode) setTheme(savedMode); else setTheme('light');
@@ -333,8 +252,6 @@ async function initApp() {
         toggleExperimental(expEnabled);
         loadCustomColors();
     } catch (e) {}
-
-    await loadRemoteConfig();
 
     setLang('en');
     startLiveClocks();
@@ -351,7 +268,7 @@ async function initApp() {
 }
 
 function getCarrierLogo(normalizedName) {
-    const baseUrl = (remoteConfig.customIconsUrl || defaultRemoteConfig.customIconsUrl).replace(/\/+$/, '/');
+    const baseUrl = './logos/';
     const n = normalizedName.toLowerCase();
     const iconMap = {
         'aaa cooper': 'aaa-cooper.png',
