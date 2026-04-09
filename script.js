@@ -590,8 +590,8 @@ function processData() {
     if (isAdvancedFormat) q.hasInternalCols = true;
 
     for (let i = 0; i < lines.length; i++) {
-                let line = normalizePriority1Text(lines[i]);
-                let lowerLine = line.toLowerCase();
+                let line = lines[i];
+                let lowerLine = normalizePriority1Text(line).toLowerCase();
 
         if (lowerLine === 'accessorials' || lowerLine === 'accessorials:') { mode = 'accessorials'; continue; }
         if (lowerLine === 'items' || lowerLine.startsWith('items / pallets') || lowerLine === 'items:') { mode = 'items'; continue; }
