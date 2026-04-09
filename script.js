@@ -63,6 +63,7 @@ window.toggleAllCarriers = function(checkbox, quoteIdx) {
 };
 
 function setTheme(theme) {
+    animateThemeTransition();
     document.documentElement.setAttribute('data-theme', theme);
     document.getElementById('btn-light').classList.toggle('active', theme === 'light');
     document.getElementById('btn-dark').classList.toggle('active', theme === 'dark');
@@ -70,9 +71,19 @@ function setTheme(theme) {
 }
 
 function setAppTheme(themeName) {
+    animateThemeTransition();
     document.documentElement.setAttribute('data-app-theme', themeName);
     document.getElementById('appThemeSelect').value = themeName;
     try { localStorage.setItem('ltl-app-theme', themeName); } catch (e) {}
+}
+
+let themeTransitionTimer;
+function animateThemeTransition() {
+    document.body.classList.add('theme-transitioning');
+    if (themeTransitionTimer) clearTimeout(themeTransitionTimer);
+    themeTransitionTimer = setTimeout(() => {
+        document.body.classList.remove('theme-transitioning');
+    }, 420);
 }
 
 function handleColorChange() {
