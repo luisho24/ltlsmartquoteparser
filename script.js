@@ -116,8 +116,8 @@ let remoteConfig = { ...defaultRemoteConfig };
 
 async function loadRemoteConfig() {
     const sources = [
-        'https://raw.githubusercontent.com/luisho24/quotool/main/config.js',
-        './config.json'
+        './config.json',
+        'https://raw.githubusercontent.com/luisho24/quotool/main/config.js'
     ];
 
     for (const url of sources) {
