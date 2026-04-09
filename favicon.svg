@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Smart LTL Quote Parser favicon">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="0.55" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#60a5fa"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#bg)"/>
+  <path d="M18 42V22.5c0-1.38 1.12-2.5 2.5-2.5H43" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+  <path d="M24 37l8-8 6 5 8-10" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="24" cy="37" r="2.4" fill="#ffffff"/>
+  <circle cx="32" cy="29" r="2.4" fill="#ffffff"/>
+  <circle cx="38" cy="34" r="2.4" fill="#ffffff"/>
+  <circle cx="46" cy="24" r="2.4" fill="#ffffff"/>
+</svg>
