@@ -486,18 +486,27 @@ function canonicalCarrierForRules(name) {
     return name;
 }
 
+function normalizePriority1Text(value) {
+    return String(value || '')
+        .replace(/[\u2800\u00a0]/g, ' ')
+        .replace(/[\u2000-\u200f\u2028\u2029\u202f\u205f\u2060]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 function extractTransitDays(line) {
-    const plainNumberMatch = String(line).trim().match(/^(\d{1,3})$/);
+    const normalizedLine = normalizePriority1Text(line);
+    const plainNumberMatch = normalizedLine.match(/^(\d{1,3})$/);
     if (plainNumberMatch) return plainNumberMatch[1];
-    const dayKeywordMatch = line.match(/(?:\b|\$)(\d{1,3})\s*Days?\b/i);
+    const dayKeywordMatch = normalizedLine.match(/(?:\b|\$)(\d{1,3})\s*Days?\b/i);
     if (dayKeywordMatch) return dayKeywordMatch[1];
-    const explicit = line.match(/\bTransit\s*[:\-]?\s*(\d{1,3})\b/i);
+    const explicit = normalizedLine.match(/\bTransit\s*[:\-]?\s*(\d{1,3})\b/i);
     if (explicit) return explicit[1];
     return 'N/A';
 }
 
 function parseTabSeparatedRateLine(line, rateType, hasInternalCols) {
-    const cols = line.split('\t').map(part => part.trim()).filter(Boolean);
+    const cols = line.split('\t').map(part => normalizePriority1Text(part)).filter(Boolean);
     if (cols.length < 5 || !cols.some(col => col.includes('$'))) return null;
 
     const carrier = cols[0] || 'Unknown';
@@ -581,8 +590,8 @@ function processData() {
     if (isAdvancedFormat) q.hasInternalCols = true;
 
     for (let i = 0; i < lines.length; i++) {
-        let line = lines[i];
-        let lowerLine = line.toLowerCase();
+                let line = normalizePriority1Text(lines[i]);
+                let lowerLine = line.toLowerCase();
 
         if (lowerLine === 'accessorials' || lowerLine === 'accessorials:') { mode = 'accessorials'; continue; }
         if (lowerLine === 'items' || lowerLine.startsWith('items / pallets') || lowerLine === 'items:') { mode = 'items'; continue; }
