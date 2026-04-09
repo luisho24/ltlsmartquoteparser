@@ -109,7 +109,7 @@ const defaultRemoteConfig = {
     killSwitchMessage: '',
     announcement: { show: false, message: '', type: 'info' },
     features: { batchMode: true },
-    customIconsUrl: 'https://raw.githubusercontent.com/luisho24/quotool/main/logos/'
+    customIconsUrl: './logos/'
 };
 
 let remoteConfig = { ...defaultRemoteConfig };

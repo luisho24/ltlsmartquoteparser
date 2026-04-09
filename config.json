@@ -9,5 +9,5 @@
   "features": {
     "batchMode": true
   },
-  "customIconsUrl": "https://raw.githubusercontent.com/luisho24/quotool/main/logos/"
+  "customIconsUrl": "./logos/"
 }
