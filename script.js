@@ -12,12 +12,11 @@ function openBugReport() {
     const titleEl = document.getElementById('bugTitle');
     const summaryEl = document.getElementById('bugSummary');
     const stepsEl = document.getElementById('bugSteps');
-    const quoteId = appQuotes[0] ? appQuotes[0].id : 'no-quote';
 
-    if (typeEl && !typeEl.value) typeEl.value = 'Bug Report';
-    if (titleEl && !titleEl.value.trim()) titleEl.value = `Bug report: ${quoteId}`;
-    if (summaryEl && !summaryEl.value.trim()) summaryEl.value = 'Observed behavior:\n\nExpected behavior:\n';
-    if (stepsEl && !stepsEl.value.trim()) stepsEl.value = '1.\n2.\n3.\n';
+    if (typeEl) typeEl.value = 'Bug Report';
+    if (titleEl) titleEl.value = '';
+    if (summaryEl) summaryEl.value = '';
+    if (stepsEl) stepsEl.value = '';
 
     updateBugReportPreview();
     document.getElementById('bugReportModal').style.display = 'flex';
