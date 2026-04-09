@@ -128,6 +128,7 @@ const dict = {
         disclaimerMsg: "⚠️ <strong>Aviso Importante:</strong> Esta herramienta proporciona recomendaciones basadas en reglas predefinidas. Siempre debe verificar y hacer un 'double check' de la información y requerimientos según lo solicitado por el cliente y las normativas actualizadas de cada carrier.",
         clearBtn: "Limpiar", clearAllBtn: "Limpiar Todo", autoCopy: "Auto-Parser al Pegar", lblBatchMode: "Modo Batch",
         optSortCheap: "Ordenar: Más Barato", optSortFast: "Ordenar: Más Rápido",
+        lblSeparateRates: "Separar LTL/Volumen",
         lblEmailTheme: "Tema Exportación:",
         toastMsg: "¡Copiado con Éxito!",
         volDisclaimer: "<strong>Tarifas LTL vs Volumen:</strong> Las tarifas LTL son la estructura estándar para envíos pequeños. En contraste, las tarifas de Volumen se basan en el espacio lineal y peso para cargas que exceden dimensiones estándar. Las tarifas de volumen ofrecen grandes ahorros pero pueden tener menor disponibilidad o tiempos de tránsito variables.",
@@ -162,6 +163,7 @@ const dict = {
         disclaimerMsg: "⚠️ <strong>Important Notice:</strong> This tool provides recommendations based on predefined rules. Always double-check information and requirements based on client requests and updated carrier tariffs.",
         clearBtn: "Clear", clearAllBtn: "Clear All", autoCopy: "Auto-Parse on Paste", lblBatchMode: "Batch Mode",
         optSortCheap: "Sort: Cheapest", optSortFast: "Sort: Fastest",
+        lblSeparateRates: "Separate LTL/Volume",
         lblEmailTheme: "Export Theme:",
         toastMsg: "Copied successfully!",
         volDisclaimer: "<strong>LTL vs Volume Rates:</strong> The LTL rate is designed for smaller shipments that don't fill a truck's capacity. In contrast, volume rates are based on linear feet and weight for larger shipments. Volume rates offer potential savings but may have less availability and variable transit times.",
@@ -182,7 +184,7 @@ function setLang(lang) {
     document.getElementById('btn-es').classList.toggle('active', lang === 'es');
     document.getElementById('btn-en').classList.toggle('active', lang === 'en');
 
-    const keys = ['mainTitle', 'step1Title', 'analyzeBtn', 'step2Title', 'destLabel', 'optStd', 'prodLabel', 'optNone', 'optTob', 'optAlc', 'optVap', 'optFire', 'insLabel', 'liftLabel', 'cubicLabel', 'lblIncludeNotes', 'clearBtn', 'clearAllBtn', 'lblBatchMode', 'optSortCheap', 'optSortFast', 'lblEmailTheme', 'appThmDef', 'appThmMono', 'appThmViv', 'appThmFem', 'appThmNav', 'appThmCorp', 'appThmFor', 'appThmEar', 'appThmMid', 'appThmSla', 'thmDef', 'thmMono', 'thmViv', 'thmFem', 'thmNav', 'thmCorp', 'thmFor', 'thmEar', 'thmMid', 'thmSla', 'toastMsg', 'btn-tab-analyzer', 'btn-tab-extras', 'extHazTitle', 'extHazDesc', 'exportPdfBtn', 'lblCarrierCost', 'lblMargin', 'exportBtn', 'copyBtn'];
+    const keys = ['mainTitle', 'step1Title', 'analyzeBtn', 'step2Title', 'destLabel', 'optStd', 'prodLabel', 'optNone', 'optTob', 'optAlc', 'optVap', 'optFire', 'insLabel', 'liftLabel', 'cubicLabel', 'lblIncludeNotes', 'clearBtn', 'clearAllBtn', 'lblBatchMode', 'optSortCheap', 'optSortFast', 'lblSeparateRates', 'lblEmailTheme', 'appThmDef', 'appThmMono', 'appThmViv', 'appThmFem', 'appThmNav', 'appThmCorp', 'appThmFor', 'appThmEar', 'appThmMid', 'appThmSla', 'thmDef', 'thmMono', 'thmViv', 'thmFem', 'thmNav', 'thmCorp', 'thmFor', 'thmEar', 'thmMid', 'thmSla', 'toastMsg', 'btn-tab-analyzer', 'btn-tab-extras', 'extHazTitle', 'extHazDesc', 'exportPdfBtn', 'lblCarrierCost', 'lblMargin', 'exportBtn', 'copyBtn'];
     keys.forEach(k => {
         const el = document.getElementById(k);
         if (el) el.innerText = dict[lang][k];
@@ -485,6 +487,8 @@ function canonicalCarrierForRules(name) {
 }
 
 function extractTransitDays(line) {
+    const plainNumberMatch = String(line).trim().match(/^(\d{1,3})$/);
+    if (plainNumberMatch) return plainNumberMatch[1];
     const dayKeywordMatch = line.match(/(?:\b|\$)(\d{1,3})\s*Days?\b/i);
     if (dayKeywordMatch) return dayKeywordMatch[1];
     const explicit = line.match(/\bTransit\s*[:\-]?\s*(\d{1,3})\b/i);
@@ -807,19 +811,22 @@ function renderTable() {
     const sortBy = document.getElementById('sortFilter').value;
     const showInternalCols = appQuotes.some(q => q.hasInternalCols);
     const isBatch = document.getElementById('batchMode').checked;
+    const separateRateTypes = document.getElementById('separateRateTypes') ? document.getElementById('separateRateTypes').checked : false;
 
     document.getElementById('internalColsFilters').style.display = showInternalCols ? 'flex' : 'none';
 
+    let exportCarrierCost = document.getElementById('exportCarrierCost') ? document.getElementById('exportCarrierCost').checked : false;
+    let exportMargin = document.getElementById('exportMargin') ? document.getElementById('exportMargin').checked : false;
+
     let headerHtml = `<th id="thCarrier">${t.thCarrier}</th><th id="thRate">${t.thRate}</th>`;
     if (showInternalCols) {
-        let exportCarrierCost = document.getElementById('exportCarrierCost') ? document.getElementById('exportCarrierCost').checked : false;
-        let exportMargin = document.getElementById('exportMargin') ? document.getElementById('exportMargin').checked : false;
         if (exportCarrierCost || exportMargin) headerHtml += `<th style="color:var(--primary); font-weight:700;">${exportCarrierCost ? t.lblCarrierCost : ''} ${exportCarrierCost && exportMargin ? '/' : ''} ${exportMargin ? t.lblMargin : ''}</th>`;
     }
     headerHtml += `<th id="thLiability">${t.thLiability}</th><th id="thTransit">${t.thTransit}</th>`;
     if (showInternalCols) headerHtml += `<th style="color:var(--primary); font-weight:700;">${t.lblExpDate}</th>`;
     headerHtml += `<th id="thNotes">${t.thNotes}</th>`;
     headerRow.innerHTML = headerHtml;
+    const totalCols = headerRow.children.length || 8;
 
     let visibleCount = 0;
 
@@ -895,10 +902,17 @@ function renderTable() {
         let p1Logo = `<img src="https://dashboard.priority1.com/Images/logo-transparent-mini.png" alt="P1" style="height: 14px; vertical-align: baseline; margin-right: 4px; display: inline-block;">`;
         let idLink = q.id !== '-' ? `<a href="https://dashboard.priority1.com/ltl/quotes/details/${q.id}" target="_blank" style="color: inherit; text-decoration: underline; vertical-align: baseline;">${q.id}</a><span style="margin: 0 4px; vertical-align: baseline;">|</span>` : '';
         let tableGroupTitle = `${p1Logo}${idLink}<span style="vertical-align: baseline;">${isBatch ? q.label : 'Priority 1 Quote'}</span> <span style="margin: 0 8px; vertical-align: baseline;">|</span> <span style="vertical-align: baseline;">${q.from || 'Origin'} ➡️ ${q.to || 'Dest'}</span>`;
-        trGroup.innerHTML = `<td colspan="8" style="font-weight: bold; color: var(--primary); font-size: 0.9rem; border-top: 2px solid var(--primary); text-align: left;"><div style="display:flex; align-items:center; justify-content: flex-start; gap:8px;"><input type="checkbox" ${allSelected ? 'checked' : ''} onchange="toggleAllCarriers(this, ${appQuotes.indexOf(q)})" title="Toggle all carriers in this quote" style="cursor:pointer; margin: 0;"><div style="text-align: left; white-space: nowrap;">${tableGroupTitle}</div></div></td>`;
+        trGroup.innerHTML = `<td colspan="${totalCols}" style="font-weight: bold; color: var(--primary); font-size: 0.9rem; border-top: 2px solid var(--primary); text-align: left;"><div style="display:flex; align-items:center; justify-content: flex-start; gap:8px;"><input type="checkbox" ${allSelected ? 'checked' : ''} onchange="toggleAllCarriers(this, ${appQuotes.indexOf(q)})" title="Toggle all carriers in this quote" style="cursor:pointer; margin: 0;"><div style="text-align: left; white-space: nowrap;">${tableGroupTitle}</div></div></td>`;
         tbody.appendChild(trGroup);
 
-        q.processedRates.forEach((row) => {
+        const appendSubgroupHeader = (label) => {
+            const trSubgroup = document.createElement('tr');
+            trSubgroup.classList.add('subgroup-header-row');
+            trSubgroup.innerHTML = `<td colspan="${totalCols}">${label}</td>`;
+            tbody.appendChild(trSubgroup);
+        };
+
+        const renderRateRow = (row) => {
             if (row.isAllowed && row.isSelected !== false) visibleCount++;
             let htmlNotes = row.warnings.map(w => `<div class="note-text" style="color:var(--warning)"><span class="note-icon">⚠️</span><span>${w}</span></div>`).join('') + row.infos.map(i => `<div class="note-text"><span class="note-icon">ℹ️</span><span>${i}</span></div>`).join('');
             let daysText = String(row.days).trim();
@@ -921,7 +935,7 @@ function renderTable() {
             let refHtml = row.quoteNumber && row.quoteNumber !== '-' ? `<div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace; margin-top: 2px;">${t.refLabel} ${row.quoteNumber}</div>` : '';
             let typeBadgeClass = row.rateType === 'Volume' ? 'badge-vol' : 'badge-ltl';
             let typeText = row.rateType === 'Volume' ? t.rateVol : t.rateLTL;
-            let rateTypeHtml = `<span class="badge ${typeBadgeClass}" style="font-size: 0.6rem; margin-left: 6px; vertical-align: middle;">${typeText}</span>`;
+            let rateTypeHtml = `<span class="badge badge-rate-chip ${typeBadgeClass}" style="font-size: 0.6rem;">${typeText}</span>`;
 
             let priceHtml = `$${row.cost.toFixed(2)}`;
             if (insVal > 0) {
@@ -931,8 +945,6 @@ function renderTable() {
 
             let internalCostHtml = '';
             let internalExpHtml = '';
-            let exportCarrierCost = document.getElementById('exportCarrierCost') ? document.getElementById('exportCarrierCost').checked : false;
-            let exportMargin = document.getElementById('exportMargin') ? document.getElementById('exportMargin').checked : false;
 
             if (showInternalCols) {
                 if (exportCarrierCost || exportMargin) {
@@ -950,7 +962,22 @@ function renderTable() {
 
             tr.innerHTML = `<td style="white-space: nowrap;"><div style="display: inline-block; vertical-align: middle;"><input type="checkbox" ${row.isSelected !== false ? 'checked' : ''} onchange="toggleCarrierSelection(this, ${appQuotes.indexOf(q)}, '${row.id}')" style="vertical-align: middle; margin-right: 6px; cursor: pointer;" title="Include in export">${iconHtml}<span class="carrier-name" style="vertical-align: middle;">${row.normalizedName}</span>${rateTypeHtml}</div>${refHtml}</td><td class="price" style="${!row.isAllowed ? 'color:var(--text-muted);' : ''}">${priceHtml}</td>${showInternalCols && (exportCarrierCost || exportMargin) ? internalCostHtml : (showInternalCols ? '<td>-</td>' : '')}<td>${liabilityHtml}</td><td><div class="transit">${daysText}</div><div style="color:var(--text-muted); font-size: 0.75rem; line-height:1.1;">${row.service}</div></td>${showInternalCols ? internalExpHtml : ''}<td><span class="badge ${row.statusClass}">${row.statusText}</span>${htmlNotes}</td>`;
             tbody.appendChild(tr);
-        });
+        };
+
+        if (separateRateTypes) {
+            const ltlRows = q.processedRates.filter(row => row.rateType !== 'Volume');
+            const volumeRows = q.processedRates.filter(row => row.rateType === 'Volume');
+            if (ltlRows.length > 0) {
+                appendSubgroupHeader(t.rateLTL);
+                ltlRows.forEach(renderRateRow);
+            }
+            if (volumeRows.length > 0) {
+                appendSubgroupHeader(t.rateVol);
+                volumeRows.forEach(renderRateRow);
+            }
+        } else {
+            q.processedRates.forEach(renderRateRow);
+        }
     });
 
     document.getElementById('resultCount').innerText = t.resCount.replace('{0}', visibleCount);

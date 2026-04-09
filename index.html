@@ -183,6 +183,10 @@
                                 <option value="cheapest" id="optSortCheap">Sort: Cheapest</option>
                                 <option value="fastest" id="optSortFast">Sort: Fastest</option>
                             </select>
+                            <label class="toolbar-inline-check">
+                                <input type="checkbox" id="separateRateTypes" onchange="renderTable()">
+                                <span id="lblSeparateRates">Separate LTL/Volume</span>
+                            </label>
                         </div>
                         <div class="toolbar-export-options" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                             <div class="toolbar-checkboxes" style="display: flex; gap: 12px; align-items: center;">

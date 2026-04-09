@@ -133,9 +133,11 @@ tr.disabled-row td:first-child { background-color: var(--disabled-bg); }
 tr.excluded-row td { opacity: 0.4; background-color: var(--table-hover); transition: all 0.2s; }
 tr.excluded-row td:first-child { background-color: var(--table-hover); }
 tr.group-header-row td { background-color: var(--toggle-bg); position: static; z-index: 1; }
+tr.subgroup-header-row td { background-color: var(--table-header); color: var(--primary); font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; position: static; z-index: 1; }
 td[colspan] { position: static !important; z-index: 1 !important; box-shadow: none !important; }
 
 .badge { padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; display: inline-block; margin-bottom: 4px; text-transform: uppercase; }
+.badge-rate-chip { margin-left: 6px; margin-bottom: 0; vertical-align: middle; }
 .badge-ok { background-color: var(--badge-ok-bg); color: var(--badge-ok-text); border: 1px solid currentColor; }
 .badge-warn { background-color: var(--badge-warn-bg); color: var(--badge-warn-text); border: 1px solid currentColor; }
 .badge-error { background-color: var(--badge-err-bg); color: var(--badge-err-text); border: 1px solid currentColor; }
@@ -162,6 +164,8 @@ td[colspan] { position: static !important; z-index: 1 !important; box-shadow: no
 .liab-val { font-weight: 600; color: var(--text); }
 
 .email-theme-select { padding: 6px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.8rem; outline: none; background: var(--card); color: var(--text); cursor: pointer; }
+.toolbar-inline-check { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text); cursor: pointer; white-space: nowrap; }
+.toolbar-inline-check input { margin: 0; }
 
 .toast-notification {
     position: fixed; bottom: 20px; right: 20px; background-color: var(--success); color: #ffffff;
