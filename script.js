@@ -694,7 +694,7 @@ function parseTabSeparatedRateLine(line, rateType, hasInternalCols) {
         }
     }
 
-    const service = cols.find(col => /(Standard Rate|Economy|Priority|LTL Standard Transit|Market Rate|Standard Service|Standard|Interline|TLX|TLS|EXCL|Guaranteed)/i.test(col)) || 'Standard';
+    const service = cols.find(col => /(Standard Rate|Economy|Priority|LTL Standard Transit|Market Rate|Standard Service|Standard|Interline|TLX|TLS|EXCL|Guaranteed|One Rate One Time)/i.test(col)) || 'Standard';
     const expiration = cols.find(col => /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(col)) || '-';
     const margin = cols.find(col => /^\d+(?:\.\d+)?%$/.test(col)) || '-';
     const daysCol = [...cols].reverse().find(col => /^\d{1,3}$/.test(col) || /^\d{1,3}\s*Days?$/i.test(col));
@@ -874,7 +874,7 @@ function processData() {
                 if (q.hasInternalCols && dollarPrices.length >= 2) carrierCost = dollarPrices[1];
 
                 let service = 'Standard';
-                let serviceMatch = line.match(/(Standard Rate|Economy|Priority|LTL Standard Transit|Market Rate|Standard Service|Standard|Interline|TLX|TLS|EXCL|Guaranteed)/i);
+                let serviceMatch = line.match(/(Standard Rate|Economy|Priority|LTL Standard Transit|Market Rate|Standard Service|Standard|Interline|TLX|TLS|EXCL|Guaranteed|One Rate One Time)/i);
                 if (serviceMatch) service = serviceMatch[1];
 
                 let days = extractTransitDays(line);
