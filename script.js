@@ -7,6 +7,62 @@ function switchTab(tabId) {
 
 function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
 function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+function openBranding() { document.getElementById('brandingModal').style.display = 'flex'; }
+function closeBranding() { document.getElementById('brandingModal').style.display = 'none'; }
+function togglePasteAnywhere(isEnabled) {
+    try { localStorage.setItem('ltl-paste-anywhere', isEnabled ? 'true' : 'false'); } catch (e) {}
+    applyPasteAnywhereMode(isEnabled);
+}
+
+function isPasteAnywhereEnabled() {
+    const toggle = document.getElementById('pasteAnywhereToggle');
+    return !!(toggle && toggle.checked);
+}
+
+function applyPasteAnywhereMode(isEnabled) {
+    document.body.classList.toggle('paste-anywhere-active', !!isEnabled);
+    const banner = document.getElementById('pasteAnywhereBanner');
+    if (banner) banner.style.display = isEnabled ? 'block' : 'none';
+}
+
+function isEditablePasteTarget(target) {
+    if (!target || !(target instanceof Element)) return false;
+    return !!target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], [contenteditable="plaintext-only"], [contenteditable]');
+}
+
+function showToast(message) {
+    const toast = document.getElementById('copyToast');
+    const toastMsg = document.getElementById('toastMsg');
+    if (!toast || !toastMsg) return;
+    toastMsg.innerText = message;
+    toast.classList.add('show');
+    if (showToast.timer) clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function handleGlobalPaste(event) {
+    if (!isPasteAnywhereEnabled()) return;
+    if (isEditablePasteTarget(event.target) || isEditablePasteTarget(document.activeElement)) return;
+
+    const pastedText = event.clipboardData ? event.clipboardData.getData('text') : '';
+    if (!pastedText || !pastedText.trim()) return;
+
+    event.preventDefault();
+    const input = document.getElementById('inputData');
+    if (!input) return;
+
+    switchTab('analyzer');
+    input.value = pastedText;
+    showToast(dict[currentLang].msgQuotePasted);
+
+    if (document.getElementById('autoCopyPaste')?.checked) {
+        setTimeout(() => {
+            processData();
+            if (appQuotes.length > 0) copyForEmail();
+        }, 50);
+    }
+}
+
 function openBugReport() {
     const typeEl = document.getElementById('bugType');
     const titleEl = document.getElementById('bugTitle');
@@ -93,8 +149,10 @@ function openBugForm() {
 function toggleExperimental(isEnabled) {
     if (isEnabled) {
         document.body.classList.add('show-experimental');
+        applyPasteAnywhereMode(isPasteAnywhereEnabled());
     } else {
         document.body.classList.remove('show-experimental');
+        applyPasteAnywhereMode(false);
         let batchCheckbox = document.getElementById('batchMode');
         if (batchCheckbox && batchCheckbox.checked) {
             batchCheckbox.checked = false;
@@ -179,6 +237,7 @@ function handleColorChange() {
         acc1: document.getElementById('cAcc').value
     };
     localStorage.setItem('ltl-custom-colors', JSON.stringify(customColors));
+    openBranding();
     openEmailPreview();
 }
 
@@ -200,30 +259,32 @@ function loadCustomColors() {
 const dict = {
     es: {
         mainTitle: "📊 Parser Inteligente de Cotizaciones LTL",
-        step1Title: "1. Datos de la Cotización", analyzeBtn: "Parser Cotización", step2Title: "2. Filtros y Reglas",
+        step1Title: "1. Datos de la Cotización", analyzeBtn: "Analizar Cotización", step2Title: "2. Reglas y Validación",
         destLabel: "Tipo de Destino:", optStd: "🏢 Comercial Estándar", prodLabel: "Mercancía Especial:", optNone: "📦 General / FAK",
         optTob: "🚬 Tabaco / Cigarros", optAlc: "🍷 Alcohol", optVap: "💨 Vapeadores", optFire: "🔫 Armas / Municiones",
         insLabel: "Seguro Adicional ($):", lblInsurance: "Seguro", lblTotal: "Total",
         insReminder: "Recordatorio: calcula primero el Insurance en CABO (calculadora Priority1).",
         insWarnHigh: "⚠️ Este monto parece incorrecto para Insurance. Si ingresas $1000+, normalmente es valor declarado, no prima. Usa la calculadora de CABO antes de continuar.",
         insWarnCap: "⚠️ Revisa este monto. El valor asegurado LTL suele tener tope de $100,000 y el margen de insurance suele rondar 20%-38%.",
+        lblPasteAnywhere: "Activar Quick Capture Mode (pegar en cualquier parte)",
         liftLabel: "Forzar advertencia de Regla de Liftgate", cubicLabel: "Exceso de Longitud / Capacidad Cúbica (Overlength)",
         lblFrom: "Origen (From)", lblTo: "Destino (To)", lblItems: "Items / Detalles", lblAcc: "Servicios Adicionales (Accessorials)",
         thCarrier: "Carrier", thRate: "Tarifa", thLiability: "Responsabilidad", thTransit: "Tránsito", thNotes: "Notas & Reglas",
-        emptyText: "Pega los datos en el panel izquierdo y presiona Parser.", resCount: "Resultados ({0} viables)",
+        emptyText: "Pega los datos en el panel izquierdo y presiona Analizar Cotización.", resCount: "Resultados ({0} viables)",
         statOk: "Compatible", statWarn: "Con Restricciones", statBanned: "Prohibido:", statRestr: "Restringido:",
         day: "Día", days: "Días", rateLTL: "LTL", rateVol: "Volumen",
-        warnLiftgate: "Precaución Liftgate", warnCubic: "Regla Capacidad/Longitud", placeholder: "Pega aquí todo el texto de tu cotización (Quote Id, From, To, Items, Rates)...",
+        warnLiftgate: "Precaución Liftgate", warnCubic: "Regla Capacidad/Longitud", placeholder: "Pega aquí tu cotización exportada de Priority1 o texto libre (Quote Id, From, To, Items, Rates)...",
         copyBtn: "📋 Copiar para Correo", exportBtn: "📁 Exportar CSV", exportPdfBtn: "📄 PDF", lblIncludeNotes: "Incluir Notas",
-        msgCopied: "¡Copiado al Portapapeles!",
+        msgCopied: "Las tarifas se copiaron correctamente al portapapeles",
         shipOptions: "Opciones de Envío", noResults: "Sin resultados exactos.", refLabel: "Quote id:",
         liabNew: "NEW:", liabUsed: "USED:",
-        disclaimerMsg: "⚠️ <strong>Aviso Importante:</strong> Esta herramienta proporciona recomendaciones basadas en reglas predefinidas. Siempre debe verificar y hacer un 'double check' de la información y requerimientos según lo solicitado por el cliente y las normativas actualizadas de cada carrier.",
+        disclaimerMsg: "⚠️ <strong>Aviso:</strong> Esta herramienta ofrece recomendaciones basadas en reglas. Verifica siempre los requerimientos finales con el cliente y las normativas actualizadas del carrier.",
         clearBtn: "Limpiar", clearAllBtn: "Limpiar Todo", autoCopy: "Auto-Parser al Pegar", lblBatchMode: "Modo Batch",
         optSortCheap: "Ordenar: Más Barato", optSortFast: "Ordenar: Más Rápido",
         lblSeparateRates: "Separar LTL/Volumen",
         lblEmailTheme: "Tema Exportación:",
-        toastMsg: "¡Copiado con Éxito!",
+        toastMsg: "Las tarifas se copiaron correctamente al portapapeles",
+        msgQuotePasted: "La cotización se pegó correctamente en el campo de entrada",
         volDisclaimer: "<strong>Tarifas LTL vs Volumen:</strong> Las tarifas LTL son la estructura estándar para envíos pequeños. En contraste, las tarifas de Volumen se basan en el espacio lineal y peso para cargas que exceden dimensiones estándar. Las tarifas de volumen ofrecen grandes ahorros pero pueden tener menor disponibilidad o tiempos de tránsito variables.",
         lblLocalTime: "Hora Local", lblPickupNear: "Cut-off cerca", lblPickupLate: "Cut-off pasado",
         waitingRates: "⏳ Esperando tarifas del carrier...",
@@ -235,30 +296,32 @@ const dict = {
     },
     en: {
         mainTitle: "📊 Smart LTL Quote Parser",
-        step1Title: "1. Quote Data Input", analyzeBtn: "Parse Quote", step2Title: "2. Rules & Filters",
+        step1Title: "1. Enter Quote Data", analyzeBtn: "Parse Quote Data", step2Title: "2. Rules & Validation",
         destLabel: "Destination Type:", optStd: "🏢 Standard Commercial", prodLabel: "Special Commodity:", optNone: "📦 General / FAK",
         optTob: "🚬 Tobacco / Cigarettes", optAlc: "🍷 Alcohol", optVap: "💨 Vape Products", optFire: "🔫 Firearms / Ammunition",
         insLabel: "Additional Insurance ($):", lblInsurance: "Insurance", lblTotal: "Total",
         insReminder: "Reminder: calculate Insurance first in CABO (Priority1 calculator).",
         insWarnHigh: "⚠️ This amount looks incorrect for Insurance. If you enter $1000+, that is usually declared value, not the premium. Use the CABO calculator before continuing.",
         insWarnCap: "⚠️ Please review this amount. LTL insured value is typically capped up to $100,000 and insurance margin is commonly around 20%-38%.",
+        lblPasteAnywhere: "Enable Quick Capture Mode (Paste Anywhere)",
         liftLabel: "Force Liftgate Rule Warning", cubicLabel: "Overlength / Cubic Capacity Rule Applies",
         lblFrom: "Origin (From)", lblTo: "Destination (To)", lblItems: "Items / Pallets", lblAcc: "Accessorials",
         thCarrier: "Carrier", thRate: "Rate", thLiability: "Liability", thTransit: "Transit", thNotes: "Notes & Rules",
-        emptyText: "Paste quote data in the left panel and click Parse.", resCount: "Results ({0} viable)",
+        emptyText: "Paste quote data in the left panel and click Parse Quote Data.", resCount: "Results ({0} viable)",
         statOk: "Compatible", statWarn: "With Restrictions", statBanned: "Banned:", statRestr: "Restricted:",
         day: "Day", days: "Days", rateLTL: "LTL", rateVol: "Volume",
-        warnLiftgate: "Liftgate Warning", warnCubic: "Cubic/Length Rule", placeholder: "Paste your full quote text here (Quote Id, From, To, Items, Rates)...",
+        warnLiftgate: "Liftgate Warning", warnCubic: "Cubic/Length Rule", placeholder: "Paste your Priority1 exported quote or freeform text here...",
         copyBtn: "📋 Copy for Email", exportBtn: "📁 CSV", exportPdfBtn: "📄 PDF", lblIncludeNotes: "Include Notes",
-        msgCopied: "Table Copied!",
+        msgCopied: "Rates copied to clipboard successfully",
         shipOptions: "Shipping Options", noResults: "No exact matches found.", refLabel: "Quote id:",
         liabNew: "NEW:", liabUsed: "USED:",
-        disclaimerMsg: "⚠️ <strong>Important Notice:</strong> This tool provides recommendations based on predefined rules. Always double-check information and requirements based on client requests and updated carrier tariffs.",
+        disclaimerMsg: "⚠️ <strong>Disclaimer:</strong> This tool provides rule-based recommendations. Always verify final requirements with your client and check updated carrier tariffs.",
         clearBtn: "Clear", clearAllBtn: "Clear All", autoCopy: "Auto-Parse on Paste", lblBatchMode: "Batch Mode",
         optSortCheap: "Sort: Cheapest", optSortFast: "Sort: Fastest",
         lblSeparateRates: "Separate LTL/Volume",
         lblEmailTheme: "Export Theme:",
-        toastMsg: "Copied successfully!",
+        toastMsg: "Rates copied to clipboard successfully",
+        msgQuotePasted: "Quote pasted into input successfully",
         volDisclaimer: "<strong>LTL vs Volume Rates:</strong> The LTL rate is designed for smaller shipments that don't fill a truck's capacity. In contrast, volume rates are based on linear feet and weight for larger shipments. Volume rates offer potential savings but may have less availability and variable transit times.",
         lblLocalTime: "Local Time", lblPickupNear: "Pickup cut-off nearing", lblPickupLate: "Likely too late for today",
         waitingRates: "⏳ Waiting for carrier rates...",
@@ -277,7 +340,7 @@ function setLang(lang) {
     document.getElementById('btn-es').classList.toggle('active', lang === 'es');
     document.getElementById('btn-en').classList.toggle('active', lang === 'en');
 
-    const keys = ['mainTitle', 'step1Title', 'analyzeBtn', 'step2Title', 'destLabel', 'optStd', 'prodLabel', 'optNone', 'optTob', 'optAlc', 'optVap', 'optFire', 'insLabel', 'liftLabel', 'cubicLabel', 'lblIncludeNotes', 'clearBtn', 'clearAllBtn', 'lblBatchMode', 'optSortCheap', 'optSortFast', 'lblSeparateRates', 'lblEmailTheme', 'appThmDef', 'appThmMono', 'appThmViv', 'appThmFem', 'appThmNav', 'appThmCorp', 'appThmFor', 'appThmEar', 'appThmMid', 'appThmSla', 'thmDef', 'thmMono', 'thmViv', 'thmFem', 'thmNav', 'thmCorp', 'thmFor', 'thmEar', 'thmMid', 'thmSla', 'toastMsg', 'btn-tab-analyzer', 'btn-tab-extras', 'extHazTitle', 'extHazDesc', 'exportPdfBtn', 'lblCarrierCost', 'lblMargin', 'exportBtn', 'copyBtn'];
+    const keys = ['mainTitle', 'step1Title', 'analyzeBtn', 'step2Title', 'destLabel', 'optStd', 'prodLabel', 'optNone', 'optTob', 'optAlc', 'optVap', 'optFire', 'insLabel', 'liftLabel', 'cubicLabel', 'lblIncludeNotes', 'clearBtn', 'clearAllBtn', 'lblBatchMode', 'lblPasteAnywhere', 'optSortCheap', 'optSortFast', 'lblSeparateRates', 'lblEmailTheme', 'appThmDef', 'appThmMono', 'appThmViv', 'appThmFem', 'appThmNav', 'appThmCorp', 'appThmFor', 'appThmEar', 'appThmMid', 'appThmSla', 'thmDef', 'thmMono', 'thmViv', 'thmFem', 'thmNav', 'thmCorp', 'thmFor', 'thmEar', 'thmMid', 'thmSla', 'toastMsg', 'btn-tab-analyzer', 'btn-tab-extras', 'extHazTitle', 'extHazDesc', 'exportPdfBtn', 'lblCarrierCost', 'lblMargin', 'exportBtn', 'copyBtn'];
     keys.forEach(k => {
         const el = document.getElementById(k);
         if (el) el.innerText = dict[lang][k];
@@ -344,7 +407,11 @@ function initApp() {
         if (savedAppTheme) setAppTheme(savedAppTheme);
         let expEnabled = localStorage.getItem('ltl-experimental') === 'true';
         document.getElementById('expToggle').checked = expEnabled;
+        const pasteAnywhereEnabled = localStorage.getItem('ltl-paste-anywhere') === 'true';
+        const pasteAnywhereToggle = document.getElementById('pasteAnywhereToggle');
+        if (pasteAnywhereToggle) pasteAnywhereToggle.checked = pasteAnywhereEnabled;
         toggleExperimental(expEnabled);
+        applyPasteAnywhereMode(pasteAnywhereEnabled);
         loadCustomColors();
     } catch (e) {}
 
@@ -360,6 +427,8 @@ function initApp() {
             }, 100);
         }
     });
+
+    document.addEventListener('paste', handleGlobalPaste);
 }
 
 function getCarrierLogo(normalizedName) {
@@ -1252,8 +1321,7 @@ function copyForEmail() {
         btn.innerText = '✅ ' + t.msgCopied;
         btn.style.backgroundColor = '#10b981';
         btn.style.color = '#ffffff';
-        const toast = document.getElementById('copyToast');
-        if (toast) { toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2500); }
+        showToast(t.toastMsg);
         setTimeout(() => { btn.innerText = originalText; btn.style.backgroundColor = ''; btn.style.color = ''; }, 2500);
     } catch (err) {
         alert('Error copying text. Your browser might block this action inside Google Sites.');
