@@ -276,6 +276,8 @@ const dict = {
         warnLiftgate: "Precaución Liftgate", warnCubic: "Regla Capacidad/Longitud", placeholder: "Pega aquí tu cotización exportada de Priority1 o texto libre (Quote Id, From, To, Items, Rates)...",
         copyBtn: "📋 Copiar para Correo", exportBtn: "📁 Exportar CSV", exportPdfBtn: "📄 PDF", lblIncludeNotes: "Incluir Notas",
         msgCopied: "Las tarifas se copiaron correctamente al portapapeles",
+        msgUpdateAvail: "¡Nueva versión disponible!",
+        btnUpdateRefresh: "Clic para actualizar",
         shipOptions: "Opciones de Envío", noResults: "Sin resultados exactos.", refLabel: "Quote id:",
         liabNew: "NEW:", liabUsed: "USED:",
         disclaimerMsg: "⚠️ <strong>Aviso:</strong> Esta herramienta ofrece recomendaciones basadas en reglas. Verifica siempre los requerimientos finales con el cliente y las normativas actualizadas del carrier.",
@@ -313,6 +315,8 @@ const dict = {
         warnLiftgate: "Liftgate Warning", warnCubic: "Cubic/Length Rule", placeholder: "Paste your Priority1 exported quote or freeform text here...",
         copyBtn: "📋 Copy for Email", exportBtn: "📁 CSV", exportPdfBtn: "📄 PDF", lblIncludeNotes: "Include Notes",
         msgCopied: "Rates copied to clipboard successfully",
+        msgUpdateAvail: "New update available!",
+        btnUpdateRefresh: "Click to refresh",
         shipOptions: "Shipping Options", noResults: "No exact matches found.", refLabel: "Quote id:",
         liabNew: "NEW:", liabUsed: "USED:",
         disclaimerMsg: "⚠️ <strong>Disclaimer:</strong> This tool provides rule-based recommendations. Always verify final requirements with your client and check updated carrier tariffs.",
@@ -362,6 +366,11 @@ function setLang(lang) {
     }
     validateInsuranceAmount();
     searchHazmat();
+
+    const updateMsg = document.getElementById('updateToastMsg');
+    const updateBtn = document.getElementById('updateToastBtn');
+    if (updateMsg && dict[lang].msgUpdateAvail) updateMsg.innerText = dict[lang].msgUpdateAvail;
+    if (updateBtn && dict[lang].btnUpdateRefresh) updateBtn.innerText = dict[lang].btnUpdateRefresh;
 }
 
 const stateTimezones = { "alabama": "America/Chicago", "alaska": "America/Anchorage", "arizona": "America/Phoenix", "arkansas": "America/Chicago", "california": "America/Los_Angeles", "colorado": "America/Denver", "connecticut": "America/New_York", "delaware": "America/New_York", "florida": "America/New_York", "georgia": "America/New_York", "hawaii": "Pacific/Honolulu", "idaho": "America/Boise", "illinois": "America/Chicago", "indiana": "America/Indiana/Indianapolis", "iowa": "America/Chicago", "kansas": "America/Chicago", "kentucky": "America/New_York", "louisiana": "America/Chicago", "maine": "America/New_York", "maryland": "America/New_York", "massachusetts": "America/New_York", "michigan": "America/Detroit", "minnesota": "America/Chicago", "mississippi": "America/Chicago", "missouri": "America/Chicago", "montana": "America/Denver", "nebraska": "America/Chicago", "nevada": "America/Los_Angeles", "new hampshire": "America/New_York", "new jersey": "America/New_York", "new mexico": "America/Denver", "new york": "America/New_York", "north carolina": "America/New_York", "north dakota": "America/Chicago", "ohio": "America/New_York", "oklahoma": "America/Chicago", "oregon": "America/Los_Angeles", "pennsylvania": "America/New_York", "rhode island": "America/New_York", "south carolina": "America/New_York", "south dakota": "America/Chicago", "tennessee": "America/Chicago", "texas": "America/Chicago", "utah": "America/Denver", "vermont": "America/New_York", "virginia": "America/New_York", "washington": "America/Los_Angeles", "west virginia": "America/New_York", "wisconsin": "America/Chicago", "wyoming": "America/Denver", "dc": "America/New_York", "district of columbia": "America/New_York", "al": "America/Chicago", "ak": "America/Anchorage", "az": "America/Phoenix", "ar": "America/Chicago", "ca": "America/Los_Angeles", "co": "America/Denver", "ct": "America/New_York", "de": "America/New_York", "fl": "America/New_York", "ga": "America/New_York", "hi": "Pacific/Honolulu", "id": "America/Boise", "il": "America/Chicago", "in": "America/Indiana/Indianapolis", "ia": "America/Chicago", "ks": "America/Chicago", "ky": "America/New_York", "la": "America/Chicago", "me": "America/New_York", "md": "America/New_York", "ma": "America/New_York", "mi": "America/Detroit", "mn": "America/Chicago", "ms": "America/Chicago", "mo": "America/Chicago", "mt": "America/Denver", "ne": "America/Chicago", "nv": "America/Los_Angeles", "nh": "America/New_York", "nj": "America/New_York", "nm": "America/Denver", "ny": "America/New_York", "nc": "America/New_York", "nd": "America/Chicago", "oh": "America/New_York", "ok": "America/Chicago", "or": "America/Los_Angeles", "pa": "America/New_York", "ri": "America/New_York", "sc": "America/New_York", "sd": "America/Chicago", "tn": "America/Chicago", "tx": "America/Chicago", "ut": "America/Denver", "vt": "America/New_York", "va": "America/New_York", "wa": "America/Los_Angeles", "wv": "America/New_York", "wi": "America/Chicago", "wy": "America/Denver" };
@@ -418,6 +427,7 @@ function initApp() {
     setLang('en');
     startLiveClocks();
     renderTable();
+    checkForUpdates();
 
     document.getElementById('inputData').addEventListener('paste', () => {
         if (document.getElementById('autoCopyPaste').checked) {
@@ -429,6 +439,25 @@ function initApp() {
     });
 
     document.addEventListener('paste', handleGlobalPaste);
+}
+
+let appVersion = null;
+async function checkForUpdates() {
+    try {
+        const res = await fetch('./version.json?t=' + Date.now());
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!appVersion) {
+            appVersion = data.version;
+            setInterval(checkForUpdates, 15 * 60 * 1000); // Check every 15 minutes
+        } else if (appVersion !== data.version) {
+            const toast = document.getElementById('updateToast');
+            if (toast) {
+                toast.style.display = 'flex';
+                toast.classList.add('show');
+            }
+        }
+    } catch (e) {}
 }
 
 function getCarrierLogo(normalizedName) {
@@ -1403,31 +1432,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const hazmatData = [
     { class: '1', type: 'Explosives', nmfc: '64300', notes: 'Please review the carrier list for Explosives to confirm which LTL carriers will move explosives.' },
-    { class: '2.1', type: 'Flammable Gases or Gas Mixtures', nmfc: '85890', notes: '' },
-    { class: '2.2', type: 'Non-Flammable and Non-Toxic Gases or Gas Mixtures', nmfc: '85880', notes: '' },
-    { class: '2.3', type: 'Poison Gases or Gas Mixtures', nmfc: '85900', notes: '' },
-    { class: '3', type: 'Flammable Liquids', nmfc: '44500', notes: 'Applies to ALL Flammable Liquids. Applies to Combustible Liquids when in bulk containers.' },
-    { class: '4.1', type: 'Flammable Solids', nmfc: '44515', notes: '' },
-    { class: '4.2', type: 'Spontaneously Combustible Materials', nmfc: '44515', notes: '' },
-    { class: '4.3', type: 'Dangerous When Wet Materials', nmfc: '44515', notes: '' },
-    { class: '5.1', type: 'Oxidizers', nmfc: '45467', notes: '' },
-    { class: '5.2', type: 'Organic Peroxides', nmfc: '45463', notes: '' },
-    { class: '6.1', type: 'Poisonous or Toxic Materials', nmfc: '45615', notes: '' },
-    { class: '6.2', type: 'Infectious Substances', nmfc: '101682', notes: 'Freight class 0 - Not taken.' },
-    { class: '7', type: 'Radioactive Materials', nmfc: '164900', notes: 'Most (if not all) LTL carriers will not move radioactive materials.' },
-    { class: '8', type: 'Corrosive Materials', nmfc: '44155', notes: '' },
-    { class: '9', type: 'Miscellaneous Hazardous Materials', nmfc: '45322', notes: 'Also applies on Marine Pollutants not specifically listed in 49 CFR §172.101, Hazardous Materials Table, and that do not meet the definition of Hazard Classes 1 through 8.' },
-    { class: 'Special', type: 'Hazardous batteries', nmfc: '60680', notes: '' },
+    { class: '1.1', type: 'Explosives (Mass explosion hazard)', nmfc: '64300', un: '0027, 0028, 0029, 0030, 0081, 0082', notes: 'Highly restricted.' },
+    { class: '1.2', type: 'Explosives (Projection hazard)', nmfc: '64300', notes: 'Highly restricted.' },
+    { class: '1.3', type: 'Explosives (Fire hazard)', nmfc: '64300', notes: 'Highly restricted.' },
+    { class: '1.4', type: 'Explosives (Minor explosion hazard)', nmfc: '64300', un: '0012, 0014, 0055, 0323', notes: 'Small arms ammunition. Usually accepted by FedEx, ABF, Saia, AAA Cooper.' },
+    { class: '1.5', type: 'Explosives (Very insensitive)', nmfc: '64300', notes: 'Blasting agents.' },
+    { class: '1.6', type: 'Explosives (Extremely insensitive)', nmfc: '64300', notes: '' },
+    { class: '2.1', type: 'Flammable Gases or Gas Mixtures', nmfc: '85890', un: '1001, 1011, 1049, 1075, 1954, 1965', notes: 'E.g., Acetylene, Butane, Propane.' },
+    { class: '2.2', type: 'Non-Flammable and Non-Toxic Gases or Gas Mixtures', nmfc: '85880', un: '1006, 1013, 1046, 1066, 1070, 1072, 1956', notes: 'E.g., Argon, Helium, Nitrogen, Oxygen.' },
+    { class: '2.3', type: 'Poison Gases or Gas Mixtures', nmfc: '85900', un: '1005, 1016, 1017, 1040, 1050, 1053, 1062', notes: 'E.g., Ammonia, Chlorine, Hydrogen Sulfide. Restricted by some carriers.' },
+    { class: '3', type: 'Flammable Liquids', nmfc: '44500', un: '1090, 1133, 1170, 1193, 1203, 1219, 1263, 1268, 1294, 1863, 1993', notes: 'Applies to ALL Flammable Liquids. Combustible Liquids in bulk containers. E.g., Gasoline, Paint, Ethanol, Toluene.' },
+    { class: '4.1', type: 'Flammable Solids', nmfc: '44515', un: '1325, 1334, 1350, 2623, 3175', notes: 'E.g., Naphthalene, Sulfur, Matches.' },
+    { class: '4.2', type: 'Spontaneously Combustible Materials', nmfc: '44515', un: '1361, 1362, 1378, 1381', notes: 'E.g., Carbon, Metal catalyst.' },
+    { class: '4.3', type: 'Dangerous When Wet Materials', nmfc: '44515', un: '1395, 1402, 1418, 1428, 1436', notes: 'E.g., Calcium carbide, Magnesium, Sodium, Zinc.' },
+    { class: '5.1', type: 'Oxidizers', nmfc: '45467', un: '1450, 1479, 1486, 1495, 1500, 1511, 1942', notes: 'E.g., Ammonium nitrate, Potassium nitrate, Sodium chlorate.' },
+    { class: '5.2', type: 'Organic Peroxides', nmfc: '45463', un: '3101, 3102, 3103, 3104, 3105, 3106, 3107', notes: 'Requires temperature control in many cases. Often rejected by standard LTL.' },
+    { class: '6.1', type: 'Poisonous or Toxic Materials', nmfc: '45615', un: '1558, 1564, 1613, 1655, 1671, 1686, 1888', notes: 'E.g., Arsenic, Barium cyanide, Phenol.' },
+    { class: '6.2', type: 'Infectious Substances', nmfc: '101682', un: '2814, 2900, 3373, 3291', notes: 'Freight class 0 - Not taken by standard LTL.' },
+    { class: '7', type: 'Radioactive Materials', nmfc: '164900', un: '2908, 2909, 2910, 2911, 2912, 2913, 2915, 2916', notes: 'Most (if not all) LTL carriers will not move radioactive materials.' },
+    { class: '8', type: 'Corrosive Materials', nmfc: '44155', un: '1759, 1760, 1789, 1791, 1805, 1824, 1830, 2794', notes: 'E.g., Hydrochloric acid, Phosphoric acid, Sodium hypochlorite, Sodium hydroxide.' },
+    { class: '9', type: 'Miscellaneous Hazardous Materials', nmfc: '45322', un: '3077, 3082, 3314, 3316', notes: 'Also applies to Marine Pollutants not specifically listed in 49 CFR. E.g., Dry ice, Asbestos, Environmentally hazardous substances.' },
+    { class: 'Special', type: 'Hazardous batteries (Lithium ion)', nmfc: '60680', un: '3480, 3481', notes: 'Lithium ion batteries (including packed with or contained in equipment).' },
+    { class: 'Special', type: 'Hazardous batteries (Lithium metal)', nmfc: '60680', un: '3090, 3091', notes: 'Lithium metal batteries (including packed with or contained in equipment).' },
+    { class: 'Special', type: 'Hazardous batteries (Wet, filled with acid/alkali)', nmfc: '60680', un: '2794, 2795', notes: 'Standard car batteries.' },
     { class: 'Special', type: 'Chemicals NOI', nmfc: '43940', notes: 'Applies to Combustible Liquids NOT in bulk containers, and applies to non-haz chemicals. For Combustible Liquids in bulk containers, see NMFC 44500.' },
     { class: 'Special', type: 'Chemical oxygen generators', nmfc: '45470', un: '3356', notes: 'Specifically applies to UN3356.' },
-    { class: 'Special', type: 'Lighters', nmfc: '111230', notes: '' },
-    { class: 'Special', type: 'EBikes or ETrikes (with hazmat batteries)', nmfc: '190270', notes: '' },
-    { class: 'Special', type: 'Air bag inflators or modules', nmfc: '192080', notes: '' },
-    { class: 'Special', type: 'Empty cylinders containing hazmat residue', nmfc: '41160', notes: '' },
+    { class: 'Special', type: 'Lighters', nmfc: '111230', un: '1057', notes: 'Lighters containing flammable gas.' },
+    { class: 'Special', type: 'Aerosols', nmfc: '45322', un: '1950', notes: 'Can be Class 2.1 or 2.2 depending on propellant.' },
+    { class: 'Special', type: 'EBikes or ETrikes (with hazmat batteries)', nmfc: '190270', un: '3171', notes: 'Battery-powered vehicles.' },
+    { class: 'Special', type: 'Air bag inflators or modules', nmfc: '192080', un: '3268', notes: 'Safety devices.' },
+    { class: 'Special', type: 'Empty cylinders containing hazmat residue', nmfc: '41160', notes: 'Residue must be treated as hazmat.' },
     { class: 'Special', type: 'Self-reactive Materials', nmfc: '46047', notes: '' },
-    { class: 'Special', type: 'Flares or Fusees', nmfc: '70060', notes: '' },
-    { class: 'Special', type: 'Oxygen, recreational', nmfc: '86070', notes: '' },
-    { class: 'Special', type: 'Life-saving boats or rafts', nmfc: '24650', notes: '' }
+    { class: 'Special', type: 'Flares or Fusees', nmfc: '70060', notes: 'Signal devices.' },
+    { class: 'Special', type: 'Oxygen, recreational', nmfc: '86070', un: '1072', notes: 'Compressed oxygen.' },
+    { class: 'Special', type: 'Life-saving boats or rafts', nmfc: '24650', un: '2990', notes: 'Self-inflating.' }
 ];
 
 function searchHazmat() {

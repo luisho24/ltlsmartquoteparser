@@ -364,6 +364,11 @@
     <span>✅</span> <span id="toastMsg">Copied to clipboard!</span>
 </div>
 
+<div id="updateToast" class="toast-notification" style="background-color: var(--primary); display: none; flex-direction: column; align-items: flex-start; z-index: 3000;">
+    <div style="font-weight: bold; margin-bottom: 4px;" id="updateToastMsg">New version available!</div>
+    <button onclick="location.reload(true)" style="background: white; color: var(--primary); border: none; padding: 4px 8px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem;" id="updateToastBtn">Click to refresh</button>
+</div>
+
 <script src="./script.js"></script>
 </body>
 </html>
