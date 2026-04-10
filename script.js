@@ -807,6 +807,8 @@ function processData() {
                 let lowerPart = cleanPart.toLowerCase();
                 if (!cleanPart || cleanPart.includes('$')) return;
 
+                const isExcessiveLengthMatch = /\b(?:excessive\s+length|overlength|(?:[7-9]|1\d|2\d)\s*(?:ft|feet|foot))\b/i.test(cleanPart);
+
                 const accRules = [
                     { name: 'Delivery Appointment', keywords: ['delivery appointment', 'appt del', 'appointment del', 'notify before delivery'] },
                     { name: 'Pickup Appointment', keywords: ['pickup appointment', 'appt pu', 'appointment pu', 'notify before pickup'] },
@@ -823,15 +825,14 @@ function processData() {
                     { name: 'Limited Access Delivery', keywords: ['limited access delivery', 'limited access del'] },
                     { name: 'Limited Access Pickup', keywords: ['limited access pickup', 'limited access pu'] },
                     { name: 'Limited Access', keywords: ['limited access'] },
-                    { name: 'Excessive Length', keywords: ['excessive length', 'overlength', '7ft', '8ft', '9ft', '10ft'] },
                     { name: 'Hazmat', keywords: ['hazardous', 'hazmat'] },
                     { name: 'Protect From Freeze', keywords: ['protect from freeze', 'freeze'] }
                 ];
 
                 let matchedRule = accRules.find(r => r.keywords.some(kw => lowerPart.includes(kw)));
-                let finalName = matchedRule ? matchedRule.name : cleanPart;
+                let finalName = isExcessiveLengthMatch ? 'Excessive Length' : (matchedRule ? matchedRule.name : cleanPart);
                 let countExisting = q.accessorials.filter(a => a === finalName).length;
-                let maxAllowed = (finalName.includes('Delivery') || finalName.includes('Pickup')) ? 1 : 2;
+                let maxAllowed = finalName === 'Excessive Length' ? 1 : ((finalName.includes('Delivery') || finalName.includes('Pickup')) ? 1 : 2);
                 if (finalName.length < 40 && countExisting < maxAllowed) q.accessorials.push(finalName);
             });
         } else if (mode === 'items') {
