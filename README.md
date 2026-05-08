@@ -31,6 +31,12 @@ http://127.0.0.1:5500/index.html
 - `styles.css`: app styles
 - `script.js`: parser, rules, rendering, exports
 - `logos/`: local carrier logos used by the UI
+- `docs/`: planning and technical notes
+
+## Android Planning
+
+- `docs/android-mvp-plan.md`: first internal APK scope and exclusions
+- `docs/android-project-blueprint.md`: suggested Android architecture and module layout
 
 ## Notes
 

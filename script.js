@@ -9,8 +9,13 @@ function openSettings() { document.getElementById('settingsModal').style.display
 function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
 function openBranding() { document.getElementById('brandingModal').style.display = 'flex'; }
 function closeBranding() { document.getElementById('brandingModal').style.display = 'none'; }
+function setDevTabVisibility(isVisible) {
+    const devTabBtn = document.getElementById('btn-tab-dev');
+    if (devTabBtn) devTabBtn.style.display = isVisible ? 'inline-flex' : 'none';
+}
+const PASTE_ANYWHERE_STORAGE_KEY = 'ltl-paste-anywhere-v2';
 function togglePasteAnywhere(isEnabled) {
-    try { localStorage.setItem('ltl-paste-anywhere', isEnabled ? 'true' : 'false'); } catch (e) {}
+    try { localStorage.setItem(PASTE_ANYWHERE_STORAGE_KEY, isEnabled ? 'true' : 'false'); } catch (e) {}
     applyPasteAnywhereMode(isEnabled);
 }
 
@@ -284,6 +289,12 @@ const dict = {
         clearBtn: "Limpiar", clearAllBtn: "Limpiar Todo", autoCopy: "Auto-Parser al Pegar", lblBatchMode: "Modo Batch",
         optSortCheap: "Ordenar: Más Barato", optSortFast: "Ordenar: Más Rápido",
         lblSeparateRates: "Separar LTL/Volumen",
+        lblBatchCheapestOnly: "Solo tarifa más barata",
+        lblBatchInlineLayout: "Diseño inline tipo hoja de cálculo",
+        lblBatchSpreadsheetRates: "Incluir tarifas en hoja",
+        lblBatchInlineRateCount: "Tarifas por cotización",
+        msgBatchInlineFallback: "Más de 3 tarifas inline usa bloques secuenciales.",
+        msgBatchInlineHelp: "El diseño inline admite hasta 3 tarifas por cotización.",
         lblEmailTheme: "Tema Exportación:",
         toastMsg: "Las tarifas se copiaron correctamente al portapapeles",
         msgQuotePasted: "La cotización se pegó correctamente en el campo de entrada",
@@ -323,6 +334,12 @@ const dict = {
         clearBtn: "Clear", clearAllBtn: "Clear All", autoCopy: "Auto-Parse on Paste", lblBatchMode: "Batch Mode",
         optSortCheap: "Sort: Cheapest", optSortFast: "Sort: Fastest",
         lblSeparateRates: "Separate LTL/Volume",
+        lblBatchCheapestOnly: "Cheapest rate only",
+        lblBatchInlineLayout: "Inline spreadsheet layout",
+        lblBatchSpreadsheetRates: "Include spreadsheet rates",
+        lblBatchInlineRateCount: "Rates per quote",
+        msgBatchInlineFallback: "More than 3 inline rates falls back to sequential quote blocks.",
+        msgBatchInlineHelp: "Inline spreadsheet layout supports up to 3 rates per quote.",
         lblEmailTheme: "Export Theme:",
         toastMsg: "Rates copied to clipboard successfully",
         msgQuotePasted: "Quote pasted into input successfully",
@@ -344,7 +361,7 @@ function setLang(lang) {
     document.getElementById('btn-es').classList.toggle('active', lang === 'es');
     document.getElementById('btn-en').classList.toggle('active', lang === 'en');
 
-    const keys = ['mainTitle', 'step1Title', 'analyzeBtn', 'step2Title', 'destLabel', 'optStd', 'prodLabel', 'optNone', 'optTob', 'optAlc', 'optVap', 'optFire', 'insLabel', 'liftLabel', 'cubicLabel', 'lblIncludeNotes', 'clearBtn', 'clearAllBtn', 'lblBatchMode', 'lblPasteAnywhere', 'optSortCheap', 'optSortFast', 'lblSeparateRates', 'lblEmailTheme', 'appThmDef', 'appThmMono', 'appThmViv', 'appThmFem', 'appThmNav', 'appThmCorp', 'appThmFor', 'appThmEar', 'appThmMid', 'appThmSla', 'thmDef', 'thmMono', 'thmViv', 'thmFem', 'thmNav', 'thmCorp', 'thmFor', 'thmEar', 'thmMid', 'thmSla', 'toastMsg', 'btn-tab-analyzer', 'btn-tab-extras', 'extHazTitle', 'extHazDesc', 'exportPdfBtn', 'lblCarrierCost', 'lblMargin', 'exportBtn', 'copyBtn'];
+    const keys = ['mainTitle', 'step1Title', 'analyzeBtn', 'step2Title', 'destLabel', 'optStd', 'prodLabel', 'optNone', 'optTob', 'optAlc', 'optVap', 'optFire', 'insLabel', 'liftLabel', 'cubicLabel', 'lblIncludeNotes', 'clearBtn', 'clearAllBtn', 'lblBatchMode', 'lblPasteAnywhere', 'optSortCheap', 'optSortFast', 'lblSeparateRates', 'lblBatchCheapestOnly', 'lblBatchInlineLayout', 'lblBatchSpreadsheetRates', 'lblBatchInlineRateCount', 'lblEmailTheme', 'appThmDef', 'appThmMono', 'appThmViv', 'appThmFem', 'appThmNav', 'appThmCorp', 'appThmFor', 'appThmEar', 'appThmMid', 'appThmSla', 'thmDef', 'thmMono', 'thmViv', 'thmFem', 'thmNav', 'thmCorp', 'thmFor', 'thmEar', 'thmMid', 'thmSla', 'toastMsg', 'btn-tab-analyzer', 'btn-tab-extras', 'extHazTitle', 'extHazDesc', 'exportPdfBtn', 'lblCarrierCost', 'lblMargin', 'exportBtn', 'copyBtn'];
     keys.forEach(k => {
         const el = document.getElementById(k);
         if (el) el.innerText = dict[lang][k];
@@ -366,6 +383,7 @@ function setLang(lang) {
     }
     validateInsuranceAmount();
     searchHazmat();
+    updateBatchExportControls();
 
     const updateMsg = document.getElementById('updateToastMsg');
     const updateBtn = document.getElementById('updateToastBtn');
@@ -416,17 +434,19 @@ function initApp() {
         if (savedAppTheme) setAppTheme(savedAppTheme);
         let expEnabled = localStorage.getItem('ltl-experimental') === 'true';
         document.getElementById('expToggle').checked = expEnabled;
-        const pasteAnywhereEnabled = localStorage.getItem('ltl-paste-anywhere') === 'true';
+        const pasteAnywhereEnabled = localStorage.getItem(PASTE_ANYWHERE_STORAGE_KEY) === 'true';
         const pasteAnywhereToggle = document.getElementById('pasteAnywhereToggle');
         if (pasteAnywhereToggle) pasteAnywhereToggle.checked = pasteAnywhereEnabled;
         toggleExperimental(expEnabled);
         applyPasteAnywhereMode(pasteAnywhereEnabled);
         loadCustomColors();
+        devUnlocked = sessionStorage.getItem(DEV_UNLOCKED_STORAGE_KEY) === 'true';
     } catch (e) {}
 
     setLang('en');
     startLiveClocks();
     renderTable();
+    renderDevMode();
     checkForUpdates();
 
     document.getElementById('inputData').addEventListener('paste', () => {
@@ -439,6 +459,14 @@ function initApp() {
     });
 
     document.addEventListener('paste', handleGlobalPaste);
+    document.addEventListener('keydown', handleDevShortcut);
+}
+
+function handleDevShortcut(event) {
+    if (event.ctrlKey && event.altKey && event.key.toLowerCase() === 'd') {
+        event.preventDefault();
+        switchTab('dev');
+    }
 }
 
 let appVersion = null;
@@ -544,12 +572,280 @@ const rules = {
     cubic: { defaultNote: 'Please check Cubic Capacity / Overlength rules tariff with this carrier.', notes: { "A. Duie Pyle": "Overlength > 8' o 6'x6'. LF > 8'. Cubic > 750 cu' (< 6 PCF).", "AAA Cooper": "Overlength > 8'. Cubic > 350 cu' (< 3 PCF) o 750 cu' (< 6 PCF).", "ABF": "Overlength > 8' (96\").", "Estes": "Overlength > 8' (96\"). Cubic > 750 cu' (< 6 PCF).", "Old Dominion": "Overlength > 8'. Capacity Load Item 390: > 20' linear o > 20,000 lbs.", "Saia": "Overlength > 8'. Cubic > 750 cu' (< 6 PCF).", "TForce": "Overlength > 8'. LF > 20'. Cubic > 750 cu' (< 6 PCF).", "XPO": "Overlength > 8'. Item 233: Cubic > 350 cu' (< 3 PCF) o 750 cu' (< 6 PCF)." } }
 };
 
+const DEV_PASSWORD = 'ltl-dev';
+const DEV_UNLOCKED_STORAGE_KEY = 'ltl-dev-unlocked';
+const DEV_LIFTGATE_WORKING_COPY_KEY = 'ltl-dev-liftgate-working-copy';
+
+const defaultLiftgateConfig = JSON.parse(JSON.stringify(rules.liftgate));
+let workingLiftgateConfig = loadWorkingLiftgateConfig();
+let activeLiftgateSource = 'default';
+let devUnlocked = false;
+
+function loadWorkingLiftgateConfig() {
+    try {
+        const saved = localStorage.getItem(DEV_LIFTGATE_WORKING_COPY_KEY);
+        return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultLiftgateConfig));
+    } catch (e) {
+        return JSON.parse(JSON.stringify(defaultLiftgateConfig));
+    }
+}
+
+function persistWorkingLiftgateConfig() {
+    try {
+        localStorage.setItem(DEV_LIFTGATE_WORKING_COPY_KEY, JSON.stringify(workingLiftgateConfig));
+    } catch (e) {}
+}
+
+function liftgateConfigsEqual() {
+    return JSON.stringify(workingLiftgateConfig) === JSON.stringify(defaultLiftgateConfig);
+}
+
+function updateDevStatusBadges() {
+    const sourceBadge = document.getElementById('devSourceBadge');
+    const dirtyBadge = document.getElementById('devDirtyBadge');
+    if (sourceBadge) sourceBadge.innerText = activeLiftgateSource === 'working' ? 'Using working copy preview' : 'Using default rules';
+    if (dirtyBadge) dirtyBadge.innerText = liftgateConfigsEqual() ? 'No local edits' : 'Local edits present';
+}
+
+function applyLiftgateRuleSource() {
+    rules.liftgate = JSON.parse(JSON.stringify(activeLiftgateSource === 'working' ? workingLiftgateConfig : defaultLiftgateConfig));
+    updateDevStatusBadges();
+    if (appQuotes.length > 0) {
+        updateSummaryUI();
+        renderTable();
+    }
+}
+
+window.unlockDevMode = function() {
+    const passwordInput = document.getElementById('devPassword');
+    const message = document.getElementById('devUnlockMsg');
+    const value = passwordInput ? passwordInput.value : '';
+    if (value !== DEV_PASSWORD) {
+        if (message) message.innerText = 'Incorrect password.';
+        return;
+    }
+    devUnlocked = true;
+    try { sessionStorage.setItem(DEV_UNLOCKED_STORAGE_KEY, 'true'); } catch (e) {}
+    renderDevMode();
+};
+
+function renderDevMode() {
+    const locked = document.getElementById('devLockedView');
+    const unlocked = document.getElementById('devUnlockedView');
+    setDevTabVisibility(devUnlocked);
+    if (locked) locked.style.display = devUnlocked ? 'none' : 'block';
+    if (unlocked) unlocked.style.display = devUnlocked ? 'block' : 'none';
+    if (devUnlocked) {
+        updateDevStatusBadges();
+        renderLiftgateEditor();
+    }
+}
+
+window.previewWorkingLiftgateRules = function() {
+    activeLiftgateSource = 'working';
+    applyLiftgateRuleSource();
+};
+
+window.useDefaultLiftgateRules = function() {
+    activeLiftgateSource = 'default';
+    applyLiftgateRuleSource();
+};
+
+window.resetLiftgateWorkingCopy = function() {
+    workingLiftgateConfig = JSON.parse(JSON.stringify(defaultLiftgateConfig));
+    persistWorkingLiftgateConfig();
+    renderLiftgateEditor();
+    updateDevStatusBadges();
+};
+
+window.exportLiftgateRulesJson = function() {
+    const blob = new Blob([JSON.stringify(workingLiftgateConfig, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'liftgate.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+};
+
+window.addLiftgateCarrier = function() {
+    let baseName = 'New Carrier';
+    let name = baseName;
+    let counter = 1;
+    while (workingLiftgateConfig.limits[name]) {
+        counter += 1;
+        name = `${baseName} ${counter}`;
+    }
+    workingLiftgateConfig.limits[name] = { l: 0, wid: 0, h: 0, w: 0, note: '' };
+    persistWorkingLiftgateConfig();
+    renderLiftgateEditor();
+};
+
+window.deleteLiftgateCarrier = function(carrierName) {
+    delete workingLiftgateConfig.limits[carrierName];
+    persistWorkingLiftgateConfig();
+    renderLiftgateEditor();
+    updateDevStatusBadges();
+};
+
+window.updateLiftgateCarrierName = function(oldName, newName) {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === oldName) return;
+    if (workingLiftgateConfig.limits[trimmed]) return;
+    workingLiftgateConfig.limits[trimmed] = workingLiftgateConfig.limits[oldName];
+    delete workingLiftgateConfig.limits[oldName];
+    persistWorkingLiftgateConfig();
+    renderLiftgateEditor();
+    updateDevStatusBadges();
+};
+
+window.updateLiftgateField = function(carrierName, field, value) {
+    if (!workingLiftgateConfig.limits[carrierName]) return;
+    const numericFields = ['l', 'wid', 'h', 'w', 'resiW', 'warnL'];
+    workingLiftgateConfig.limits[carrierName][field] = numericFields.includes(field)
+        ? (parseFloat(value) || 0)
+        : value;
+    persistWorkingLiftgateConfig();
+    updateDevStatusBadges();
+};
+
+function renderLiftgateEditor() {
+    const container = document.getElementById('liftgateEditorList');
+    if (!container) return;
+    const searchTerm = (document.getElementById('devCarrierSearch')?.value || '').trim().toLowerCase();
+    const entries = Object.entries(workingLiftgateConfig.limits)
+        .filter(([carrier]) => !searchTerm || carrier.toLowerCase().includes(searchTerm))
+        .sort((a, b) => a[0].localeCompare(b[0]));
+
+    if (!entries.length) {
+        container.innerHTML = '<div class="dev-inline-note">No liftgate carriers match the current search.</div>';
+        return;
+    }
+
+    container.innerHTML = entries.map(([carrier, rule]) => `
+        <div class="dev-rule-card">
+            <div class="dev-rule-header">
+                <input type="text" value="${carrier}" onblur="updateLiftgateCarrierName('${carrier.replace(/'/g, "\\'")}', this.value)">
+                <div class="dev-rule-actions">
+                    <button class="danger-btn batch-action-btn" onclick="deleteLiftgateCarrier('${carrier.replace(/'/g, "\\'")}')">Delete</button>
+                </div>
+            </div>
+            <div class="dev-rule-grid">
+                <div class="filter-group"><label>Weight (lb)</label><input type="number" value="${rule.w || 0}" oninput="updateLiftgateField('${carrier.replace(/'/g, "\\'")}', 'w', this.value)"></div>
+                <div class="filter-group"><label>Length (in)</label><input type="number" value="${rule.l || 0}" oninput="updateLiftgateField('${carrier.replace(/'/g, "\\'")}', 'l', this.value)"></div>
+                <div class="filter-group"><label>Width (in)</label><input type="number" value="${rule.wid || 0}" oninput="updateLiftgateField('${carrier.replace(/'/g, "\\'")}', 'wid', this.value)"></div>
+                <div class="filter-group"><label>Height (in)</label><input type="number" value="${rule.h || 0}" oninput="updateLiftgateField('${carrier.replace(/'/g, "\\'")}', 'h', this.value)"></div>
+                <div class="filter-group"><label>Residential Weight (lb)</label><input type="number" value="${rule.resiW || 0}" oninput="updateLiftgateField('${carrier.replace(/'/g, "\\'")}', 'resiW', this.value)"></div>
+                <div class="filter-group"><label>Warn Length (in)</label><input type="number" value="${rule.warnL || 0}" oninput="updateLiftgateField('${carrier.replace(/'/g, "\\'")}', 'warnL', this.value)"></div>
+                <div class="filter-group" style="grid-column: 1 / -1;"><label>Note</label><input type="text" value="${(rule.note || '').replace(/"/g, '&quot;')}" oninput="updateLiftgateField('${carrier.replace(/'/g, "\\'")}', 'note', this.value)"></div>
+            </div>
+        </div>
+    `).join('');
+}
+
 let appQuotes = [];
 let lastParsedText = '';
+let batchQuoteCounter = 0;
+
+function createBatchKey() {
+    batchQuoteCounter += 1;
+    return `batch-${Date.now()}-${batchQuoteCounter}`;
+}
+
+function renumberBatchLabels() {
+    appQuotes.forEach((quote, index) => {
+        quote.label = `Quote #${index + 1}`;
+    });
+}
+
+function getBatchQuoteIndex(batchKey) {
+    return appQuotes.findIndex(q => q.batchKey === batchKey);
+}
+
+window.removeBatchQuote = function(batchKey) {
+    const index = getBatchQuoteIndex(batchKey);
+    if (index === -1) return;
+    appQuotes.splice(index, 1);
+    renumberBatchLabels();
+    updateSummaryUI();
+    renderTable();
+};
+
+window.moveBatchQuoteUp = function(batchKey) {
+    const index = getBatchQuoteIndex(batchKey);
+    if (index <= 0) return;
+    const temp = appQuotes[index - 1];
+    appQuotes[index - 1] = appQuotes[index];
+    appQuotes[index] = temp;
+    renumberBatchLabels();
+    updateSummaryUI();
+    renderTable();
+};
+
+window.moveBatchQuoteDown = function(batchKey) {
+    const index = getBatchQuoteIndex(batchKey);
+    if (index === -1 || index >= appQuotes.length - 1) return;
+    const temp = appQuotes[index + 1];
+    appQuotes[index + 1] = appQuotes[index];
+    appQuotes[index] = temp;
+    renumberBatchLabels();
+    updateSummaryUI();
+    renderTable();
+};
+
+window.updateBatchQuoteInsurance = function(batchKey, value) {
+    const index = getBatchQuoteIndex(batchKey);
+    if (index === -1) return;
+    appQuotes[index].insurance = parseFloat(value) || 0;
+    renderTable();
+};
+
+function getBatchExportOptions() {
+    const inlineLayout = !!document.getElementById('batchInlineLayout')?.checked;
+    const cheapestOnly = !!document.getElementById('batchCheapestOnly')?.checked;
+    const includeSpreadsheetRates = !!document.getElementById('batchSpreadsheetRates')?.checked;
+    const requestedRateCount = parseInt(document.getElementById('batchInlineRateCount')?.value || '1', 10) || 1;
+    return {
+        inlineLayout,
+        cheapestOnly,
+        includeSpreadsheetRates,
+        requestedRateCount,
+        useInlineLayout: inlineLayout && requestedRateCount <= 3,
+        inlineRateCount: Math.min(Math.max(requestedRateCount, 1), 3)
+    };
+}
+
+function updateBatchExportControls() {
+    const isBatch = !!document.getElementById('batchMode')?.checked;
+    const wrapper = document.getElementById('batchExportControls');
+    const inlineLayout = document.getElementById('batchInlineLayout');
+    const spreadsheetRates = document.getElementById('batchSpreadsheetRates');
+    const rateCount = document.getElementById('batchInlineRateCount');
+    const helper = document.getElementById('batchInlineHelper');
+
+    if (wrapper) wrapper.style.display = isBatch ? 'flex' : 'none';
+    const inlineEnabled = isBatch && !!inlineLayout?.checked;
+    if (spreadsheetRates) spreadsheetRates.disabled = !inlineEnabled;
+    if (rateCount) rateCount.disabled = !inlineEnabled || !spreadsheetRates?.checked;
+
+    if (helper) {
+        if (!inlineEnabled) {
+            helper.innerText = '';
+        } else {
+            const selected = parseInt(rateCount?.value || '1', 10) || 1;
+            helper.innerText = selected > 3
+                ? dict[currentLang].msgBatchInlineFallback
+                : dict[currentLang].msgBatchInlineHelp;
+        }
+    }
+}
 
 function toggleBatchMode() {
     const isBatch = document.getElementById('batchMode').checked;
     document.getElementById('clearAllBtn').style.display = isBatch ? 'block' : 'none';
+    updateBatchExportControls();
 }
 
 function handleInsuranceInput() {
@@ -623,6 +919,7 @@ function clearAllDataInternal() {
     document.getElementById('quoteSummaryContainer').innerHTML = '';
     appQuotes = [];
     lastParsedText = '';
+    batchQuoteCounter = 0;
     renderTable();
 }
 
@@ -762,6 +1059,7 @@ function processData() {
     if (!isBatch) appQuotes = [];
 
     let q = {
+        batchKey: createBatchKey(),
         label: isBatch ? `Quote #${appQuotes.length + 1}` : 'Priority 1 Quote',
         id: '-', from: '-', to: '-', items: [], accessorials: [],
         maxDims: { weight: 0, length: 0, width: 0, height: 0 },
@@ -939,6 +1237,7 @@ function processData() {
     }
 
     appQuotes.push(q);
+    if (isBatch) renumberBatchLabels();
     updateSummaryUI();
     renderTable();
     startLiveClocks();
@@ -981,9 +1280,11 @@ function updateSummaryUI() {
         let clockHtml = tz ? `<span class="live-clock" data-tz="${tz}">--:--</span>` : '';
         let p1Logo = `<img src="https://dashboard.priority1.com/Images/logo-transparent-mini.png" alt="P1" style="height: 14px; vertical-align: baseline; margin-right: 4px; display: inline-block;">`;
         let idLink = q.id !== '-' ? `<a href="https://dashboard.priority1.com/ltl/quotes/details/${q.id}" target="_blank" style="color: inherit; text-decoration: underline; vertical-align: baseline;">${q.id}</a><span style="margin: 0 4px; vertical-align: baseline;">|</span>` : '';
-        let headerBlock = `<div class="summary-item summary-full-width" style="margin-top: 0; padding-top: 0; border-top: none; margin-bottom: 8px; text-align: left;"><div class="summary-label" style="font-size: 0.9rem; color: var(--primary); text-align: left; display: block; white-space: nowrap;">${p1Logo}${idLink}<span style="vertical-align: baseline;">${isBatch ? q.label : 'Priority 1 Quote'}</span></div></div>`;
+        let batchActions = isBatch ? `<div class="batch-summary-actions"><button class="secondary-btn batch-action-btn" onclick="moveBatchQuoteUp('${q.batchKey}')">↑ Move Up</button><button class="secondary-btn batch-action-btn" onclick="moveBatchQuoteDown('${q.batchKey}')">↓ Move Down</button><button class="danger-btn batch-action-btn" onclick="removeBatchQuote('${q.batchKey}')">Delete</button></div>` : '';
+        let batchInsuranceControl = isBatch ? `<div class="summary-item summary-full-width batch-insurance-editor"><span class="summary-label">${t.insLabel}</span><div class="batch-insurance-control"><input type="number" min="0" step="0.01" value="${q.insurance ? q.insurance : ''}" oninput="updateBatchQuoteInsurance('${q.batchKey}', this.value)"><span class="batch-insurance-hint">Applied only to ${q.label}</span></div></div>` : '';
+        let headerBlock = `<div class="summary-item summary-full-width" style="margin-top: 0; padding-top: 0; border-top: none; margin-bottom: 8px; text-align: left;"><div class="summary-label" style="font-size: 0.9rem; color: var(--primary); text-align: left; display: block; white-space: nowrap;">${p1Logo}${idLink}<span style="vertical-align: baseline;">${isBatch ? q.label : 'Priority 1 Quote'}</span></div>${batchActions}</div>`;
 
-        html += `<div class="quote-summary" style="display: block; margin-bottom: 16px;"><div class="summary-grid">${headerBlock}<div class="summary-item summary-full-width" style="margin-top: 0; padding-top: 0; border-top: none;"><span class="summary-label">${t.lblFrom}</span><span class="summary-value">${q.from} ${clockHtml}</span></div><div class="summary-item summary-full-width"><span class="summary-label">${t.lblTo}</span><span class="summary-value">${q.to}</span></div><div class="summary-item summary-full-width"><span class="summary-label">${t.lblItems}</span><span class="summary-value" style="font-family: monospace; font-size: 0.85rem; font-weight: normal; line-height: 1.5;">${itemsHtml}</span></div><div class="summary-item summary-full-width" style="display:${showAcc}; padding-top:4px; border-top:none;"><span class="summary-label">${t.lblAcc}</span><span class="summary-value" style="color:var(--warning); font-size: 0.85rem;">${accHtml}</span></div></div>${warnHtml}</div>`;
+        html += `<div class="quote-summary" style="display: block; margin-bottom: 16px;"><div class="summary-grid">${headerBlock}<div class="summary-item summary-full-width" style="margin-top: 0; padding-top: 0; border-top: none;"><span class="summary-label">${t.lblFrom}</span><span class="summary-value">${q.from} ${clockHtml}</span></div><div class="summary-item summary-full-width"><span class="summary-label">${t.lblTo}</span><span class="summary-value">${q.to}</span></div><div class="summary-item summary-full-width"><span class="summary-label">${t.lblItems}</span><span class="summary-value" style="font-family: monospace; font-size: 0.85rem; font-weight: normal; line-height: 1.5;">${itemsHtml}</span></div><div class="summary-item summary-full-width" style="display:${showAcc}; padding-top:4px; border-top:none;"><span class="summary-label">${t.lblAcc}</span><span class="summary-value" style="color:var(--warning); font-size: 0.85rem;">${accHtml}</span></div>${batchInsuranceControl}</div>${warnHtml}</div>`;
     });
 
     container.innerHTML = html;
@@ -1013,6 +1314,7 @@ function renderTable() {
     const showInternalCols = appQuotes.some(q => q.hasInternalCols);
     const isBatch = document.getElementById('batchMode').checked;
     const separateRateTypes = document.getElementById('separateRateTypes') ? document.getElementById('separateRateTypes').checked : false;
+    updateBatchExportControls();
 
     document.getElementById('internalColsFilters').style.display = showInternalCols ? 'flex' : 'none';
 
@@ -1184,6 +1486,74 @@ function renderTable() {
     document.getElementById('resultCount').innerText = t.resCount.replace('{0}', visibleCount);
 }
 
+function getExportRatesForQuote(q, options) {
+    const baseRates = (q.processedRates || []).filter(r => r.isAllowed && r.isSelected !== false);
+    if (options.cheapestOnly) return baseRates.slice(0, 1);
+    if (options.useInlineLayout && options.includeSpreadsheetRates) return baseRates.slice(0, options.inlineRateCount);
+    return baseRates;
+}
+
+function buildBatchInlineTable(targetQuotes, options, t, th) {
+    const quotesWithRates = targetQuotes
+        .map(q => ({ q, rates: getExportRatesForQuote(q, options) }))
+        .filter(entry => entry.rates.length > 0);
+
+    if (!quotesWithRates.length) return '';
+
+    let maxRates = options.cheapestOnly ? 1 : Math.min(options.inlineRateCount, 3);
+    if (!options.includeSpreadsheetRates) maxRates = 1;
+
+    let headerCells = `
+        <th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">P1 Quote ID</th>
+        <th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">${t.lblFrom}</th>
+        <th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">${t.lblTo}</th>`;
+
+    for (let i = 1; i <= maxRates; i++) {
+        headerCells += `
+        <th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">Rate ${i}</th>
+        <th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">Transit ${i}</th>
+        <th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">Carrier ${i}</th>`;
+    }
+
+    let html = `<table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; color: ${th.text}; margin-bottom: 12px;">
+        <thead><tr>${headerCells}</tr></thead><tbody>`;
+
+    quotesWithRates.forEach(({ q, rates }) => {
+        const quoteLink = q.id !== '-' ? `<a href="https://dashboard.priority1.com/ltl/quotes/details/${q.id}" style="color: ${th.primary}; text-decoration: underline;" target="_blank">${q.id}</a>` : '-';
+        let rowHtml = `
+        <tr>
+            <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">${quoteLink}</td>
+            <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">${q.from || 'N/A'}</td>
+            <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">${q.to || 'N/A'}</td>`;
+
+        for (let i = 0; i < maxRates; i++) {
+            const rate = rates[i];
+            if (rate) {
+                let daysText = String(rate.days).trim();
+                if (daysText !== '') {
+                    if (daysText === '1') daysText += ` ${t.day}`;
+                    else if (!isNaN(daysText) || /^\d+(\s*-\s*\d+)?$/.test(daysText)) daysText += ` ${t.days}`;
+                }
+                rowHtml += `
+                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top; color: ${th.primary}; font-weight: bold;">$${rate.cost.toFixed(2)}</td>
+                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">${daysText}</td>
+                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">${rate.normalizedName}</td>`;
+            } else {
+                rowHtml += `
+                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">-</td>
+                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">-</td>
+                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">-</td>`;
+            }
+        }
+
+        rowHtml += `</tr>`;
+        html += rowHtml;
+    });
+
+    html += `</tbody></table>`;
+    return html;
+}
+
 function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
     const t = dict[currentLang];
     const isBatch = document.getElementById('batchMode').checked;
@@ -1192,6 +1562,7 @@ function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
     const selectedThemeId = document.getElementById('emailTheme').value;
     const hasInternalCols = targetQuotes.some(q => q.hasInternalCols);
     let hasVolume = false;
+    const batchExportOptions = getBatchExportOptions();
 
     const emailThemes = {
         default: { bg: '#ffffff', thBg: '#f1f5f9', border: '#cbd5e1', text: '#333333', textMuted: '#64748b', primary: '#2563eb', acc1: '#166534', acc2: '#b45309', thText: '#333333' },
@@ -1220,10 +1591,20 @@ function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
 
     let html = `<div id="exportWrapper" style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: ${th.text}; ${isPdf ? 'width: 100%;' : 'max-width: 800px;'} background-color: ${th.bg}; padding: 10px; box-sizing: border-box;">`;
 
+    if (isBatch && batchExportOptions.useInlineLayout) {
+        if (batchExportOptions.requestedRateCount > 3) {
+            // Fallback to sequential layout below.
+        } else {
+            html += buildBatchInlineTable(targetQuotes, batchExportOptions, t, th);
+            html += `</div>`;
+            return html;
+        }
+    }
+
     targetQuotes.forEach(q => {
-        let allowedRates = q.processedRates.filter(r => r.isAllowed && r.isSelected !== false);
+        let allowedRates = getExportRatesForQuote(q, batchExportOptions);
         if (allowedRates.length === 0) return;
-        let insVal = document.getElementById('insuranceInput') ? (parseFloat(document.getElementById('insuranceInput').value) || 0) : 0;
+        let insVal = isBatch ? (q.insurance || 0) : (document.getElementById('insuranceInput') ? (parseFloat(document.getElementById('insuranceInput').value) || 0) : 0);
         let itemsHtml = q.items.length > 0 ? q.items.map(i => i.isSub ? `<li style="list-style-type: none; font-size: 12px; color: ${th.textMuted}; margin-left: 12px; margin-top: 2px;">↳ ${i.text}</li>` : `<li style="margin-top: 4px;">${i.text}</li>`).join('') : '<li>N/A</li>';
         let counts = {}; q.accessorials.forEach(a => counts[a] = (counts[a] || 0) + 1);
         let accHtmlArray = Object.entries(counts).map(([a, c]) => c > 1 ? `${a} (x${c})` : a);

@@ -193,6 +193,7 @@
     <div class="tabs-nav">
         <button class="tab-btn active" id="btn-tab-analyzer" onclick="switchTab('analyzer')">Parser</button>
         <button class="tab-btn" id="btn-tab-extras" onclick="switchTab('extras')">Extras</button>
+        <button class="tab-btn" id="btn-tab-dev" onclick="switchTab('dev')" style="display:none;">Dev</button>
     </div>
 
     <div id="view-analyzer" class="tab-pane active">
@@ -279,6 +280,30 @@
                                 <span id="lblSeparateRates">Separate LTL/Volume</span>
                             </label>
                         </div>
+                        <div id="batchExportControls" class="batch-export-controls" style="display:none;">
+                            <label class="toolbar-inline-check">
+                                <input type="checkbox" id="batchCheapestOnly" onchange="renderTable()">
+                                <span id="lblBatchCheapestOnly">Cheapest rate only</span>
+                            </label>
+                            <label class="toolbar-inline-check">
+                                <input type="checkbox" id="batchInlineLayout" onchange="updateBatchExportControls()">
+                                <span id="lblBatchInlineLayout">Inline spreadsheet layout</span>
+                            </label>
+                            <label class="toolbar-inline-check">
+                                <input type="checkbox" id="batchSpreadsheetRates" onchange="updateBatchExportControls()">
+                                <span id="lblBatchSpreadsheetRates">Include spreadsheet rates</span>
+                            </label>
+                            <div class="batch-rate-count-group">
+                                <span id="lblBatchInlineRateCount">Rates per quote</span>
+                                <select id="batchInlineRateCount" onchange="updateBatchExportControls()">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                </select>
+                            </div>
+                            <div id="batchInlineHelper" class="batch-inline-helper"></div>
+                        </div>
                         <div class="toolbar-export-options" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                             <div class="toolbar-checkboxes" style="display: flex; gap: 12px; align-items: center;">
                                 <div id="internalColsFilters" style="display:none; gap: 12px; padding-left: 12px; border-left: 1px solid var(--border);">
@@ -354,6 +379,52 @@
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;" id="extHazDesc">Quickly search for Hazmat classes, common NMFC numbers, or UN# without leaving the tool.</p>
                 <input type="text" id="hazmatSearch" placeholder="Ex. 1203, UN1203, Explosives, Batteries..." onkeyup="searchHazmat()" style="width: 100%;">
                 <div id="hazmatResults" style="max-height: 500px; overflow-y: auto; margin-top: 16px; padding: 0 4px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-dev" class="tab-pane">
+        <div class="grid" style="grid-template-columns: 1fr; max-width: 1100px; margin: 0 auto;">
+            <div class="panel panel-elevated">
+                <div id="devLockedView">
+                    <h3 style="margin:0 0 12px 0;">Developer Mode</h3>
+                    <p class="dev-mode-intro">Unlock the local liftgate rules editor. This is a local working copy only and does not overwrite the default published rules unless you explicitly export and publish them later.</p>
+                    <div class="filter-group" style="max-width: 360px;">
+                        <label for="devPassword">Password</label>
+                        <input type="password" id="devPassword" placeholder="Enter developer password">
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px;">
+                        <button class="primary-btn" style="flex: initial;" onclick="unlockDevMode()">Unlock Dev Mode</button>
+                    </div>
+                    <div id="devUnlockMsg" class="dev-inline-note"></div>
+                </div>
+
+                <div id="devUnlockedView" style="display:none;">
+                    <div class="dev-toolbar">
+                        <div>
+                            <h3 style="margin:0; border:none; padding:0;">Liftgate Rules Editor</h3>
+                            <div class="dev-inline-note">Editing local working copy of <code>liftgate.json</code>. Default rules remain available and unchanged until you export and publish them.</div>
+                        </div>
+                        <div class="dev-toolbar-actions">
+                            <button class="secondary-btn" onclick="previewWorkingLiftgateRules()">Preview Working Copy</button>
+                            <button class="secondary-btn" onclick="useDefaultLiftgateRules()">Use Default Rules</button>
+                            <button class="secondary-btn" onclick="resetLiftgateWorkingCopy()">Reset Working Copy</button>
+                            <button class="primary-btn" onclick="exportLiftgateRulesJson()">Export JSON</button>
+                        </div>
+                    </div>
+
+                    <div class="dev-status-strip">
+                        <span class="dev-status-badge" id="devSourceBadge">Using default rules</span>
+                        <span class="dev-status-badge" id="devDirtyBadge">No local edits</span>
+                    </div>
+
+                    <div class="dev-editor-actions">
+                        <input type="text" id="devCarrierSearch" placeholder="Search carrier..." oninput="renderLiftgateEditor()">
+                        <button class="secondary-btn" onclick="addLiftgateCarrier()">Add Carrier</button>
+                    </div>
+
+                    <div id="liftgateEditorList" class="dev-editor-list"></div>
+                </div>
             </div>
         </div>
     </div>
