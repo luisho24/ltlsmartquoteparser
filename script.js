@@ -269,7 +269,7 @@ const dict = {
         optTob: "🚬 Tabaco / Cigarros", optAlc: "🍷 Alcohol", optVap: "💨 Vapeadores", optFire: "🔫 Armas / Municiones",
         insLabel: "Seguro Adicional ($):", lblInsurance: "Seguro", lblTotal: "Total",
         insReminder: "Recordatorio: calcula primero el Insurance en CABO (calculadora Priority1).",
-        insWarnHigh: "⚠️ Este monto parece incorrecto para Insurance. Si ingresas $1000+, normalmente es valor declarado, no prima. Usa la calculadora de CABO antes de continuar.",
+        insWarnHigh: "⚠️ Este monto parece incorrecto para Insurance. Si ingresas más de $400, normalmente es valor declarado, no la prima. Usa la calculadora de CABO antes de continuar.",
         insWarnCap: "⚠️ Revisa este monto. El valor asegurado LTL suele tener tope de $100,000 y el margen de insurance suele rondar 20%-38%.",
         lblPasteAnywhere: "Activar Quick Capture Mode (pegar en cualquier parte)",
         liftLabel: "Forzar advertencia de Regla de Liftgate", cubicLabel: "Exceso de Longitud / Capacidad Cúbica (Overlength)",
@@ -288,13 +288,14 @@ const dict = {
         disclaimerMsg: "⚠️ <strong>Aviso:</strong> Esta herramienta ofrece recomendaciones basadas en reglas. Verifica siempre los requerimientos finales con el cliente y las normativas actualizadas del carrier.",
         clearBtn: "Limpiar", clearAllBtn: "Limpiar Todo", autoCopy: "Auto-Parser al Pegar", lblBatchMode: "Modo Batch",
         optSortCheap: "Ordenar: Más Barato", optSortFast: "Ordenar: Más Rápido",
+        lblBatchShowTableView: "Mostrar vista de tabla",
         lblSeparateRates: "Separar LTL/Volumen",
         lblBatchCheapestOnly: "Solo tarifa más barata",
         lblBatchInlineLayout: "Diseño inline tipo hoja de cálculo",
         lblBatchSpreadsheetRates: "Incluir tarifas en hoja",
         lblBatchInlineRateCount: "Tarifas por cotización",
-        msgBatchInlineFallback: "Más de 3 tarifas inline usa bloques secuenciales.",
-        msgBatchInlineHelp: "El diseño inline admite hasta 3 tarifas por cotización.",
+        msgBatchInlineFallback: "Más de 4 tarifas inline usa bloques secuenciales.",
+        msgBatchInlineHelp: "El diseño inline admite hasta 4 tarifas por cotización.",
         lblEmailTheme: "Tema Exportación:",
         toastMsg: "Las tarifas se copiaron correctamente al portapapeles",
         msgQuotePasted: "La cotización se pegó correctamente en el campo de entrada",
@@ -314,7 +315,7 @@ const dict = {
         optTob: "🚬 Tobacco / Cigarettes", optAlc: "🍷 Alcohol", optVap: "💨 Vape Products", optFire: "🔫 Firearms / Ammunition",
         insLabel: "Additional Insurance ($):", lblInsurance: "Insurance", lblTotal: "Total",
         insReminder: "Reminder: calculate Insurance first in CABO (Priority1 calculator).",
-        insWarnHigh: "⚠️ This amount looks incorrect for Insurance. If you enter $1000+, that is usually declared value, not the premium. Use the CABO calculator before continuing.",
+        insWarnHigh: "⚠️ This amount looks incorrect for Insurance. If you enter more than $400, that is usually declared value, not the premium. Use the CABO calculator before continuing.",
         insWarnCap: "⚠️ Please review this amount. LTL insured value is typically capped up to $100,000 and insurance margin is commonly around 20%-38%.",
         lblPasteAnywhere: "Enable Quick Capture Mode (Paste Anywhere)",
         liftLabel: "Force Liftgate Rule Warning", cubicLabel: "Overlength / Cubic Capacity Rule Applies",
@@ -333,13 +334,14 @@ const dict = {
         disclaimerMsg: "⚠️ <strong>Disclaimer:</strong> This tool provides rule-based recommendations. Always verify final requirements with your client and check updated carrier tariffs.",
         clearBtn: "Clear", clearAllBtn: "Clear All", autoCopy: "Auto-Parse on Paste", lblBatchMode: "Batch Mode",
         optSortCheap: "Sort: Cheapest", optSortFast: "Sort: Fastest",
+        lblBatchShowTableView: "Show table view",
         lblSeparateRates: "Separate LTL/Volume",
         lblBatchCheapestOnly: "Cheapest rate only",
         lblBatchInlineLayout: "Inline spreadsheet layout",
         lblBatchSpreadsheetRates: "Include spreadsheet rates",
         lblBatchInlineRateCount: "Rates per quote",
-        msgBatchInlineFallback: "More than 3 inline rates falls back to sequential quote blocks.",
-        msgBatchInlineHelp: "Inline spreadsheet layout supports up to 3 rates per quote.",
+        msgBatchInlineFallback: "More than 4 inline rates falls back to sequential quote blocks.",
+        msgBatchInlineHelp: "Inline spreadsheet layout supports up to 4 rates per quote.",
         lblEmailTheme: "Export Theme:",
         toastMsg: "Rates copied to clipboard successfully",
         msgQuotePasted: "Quote pasted into input successfully",
@@ -361,7 +363,7 @@ function setLang(lang) {
     document.getElementById('btn-es').classList.toggle('active', lang === 'es');
     document.getElementById('btn-en').classList.toggle('active', lang === 'en');
 
-    const keys = ['mainTitle', 'step1Title', 'analyzeBtn', 'step2Title', 'destLabel', 'optStd', 'prodLabel', 'optNone', 'optTob', 'optAlc', 'optVap', 'optFire', 'insLabel', 'liftLabel', 'cubicLabel', 'lblIncludeNotes', 'clearBtn', 'clearAllBtn', 'lblBatchMode', 'lblPasteAnywhere', 'optSortCheap', 'optSortFast', 'lblSeparateRates', 'lblBatchCheapestOnly', 'lblBatchInlineLayout', 'lblBatchSpreadsheetRates', 'lblBatchInlineRateCount', 'lblEmailTheme', 'appThmDef', 'appThmMono', 'appThmViv', 'appThmFem', 'appThmNav', 'appThmCorp', 'appThmFor', 'appThmEar', 'appThmMid', 'appThmSla', 'thmDef', 'thmMono', 'thmViv', 'thmFem', 'thmNav', 'thmCorp', 'thmFor', 'thmEar', 'thmMid', 'thmSla', 'toastMsg', 'btn-tab-analyzer', 'btn-tab-extras', 'extHazTitle', 'extHazDesc', 'exportPdfBtn', 'lblCarrierCost', 'lblMargin', 'exportBtn', 'copyBtn'];
+    const keys = ['mainTitle', 'step1Title', 'analyzeBtn', 'step2Title', 'destLabel', 'optStd', 'prodLabel', 'optNone', 'optTob', 'optAlc', 'optVap', 'optFire', 'insLabel', 'liftLabel', 'cubicLabel', 'lblIncludeNotes', 'clearBtn', 'clearAllBtn', 'lblBatchMode', 'lblPasteAnywhere', 'optSortCheap', 'optSortFast', 'lblBatchShowTableView', 'lblSeparateRates', 'lblBatchCheapestOnly', 'lblBatchInlineLayout', 'lblBatchSpreadsheetRates', 'lblBatchInlineRateCount', 'lblEmailTheme', 'appThmDef', 'appThmMono', 'appThmViv', 'appThmFem', 'appThmNav', 'appThmCorp', 'appThmFor', 'appThmEar', 'appThmMid', 'appThmSla', 'thmDef', 'thmMono', 'thmViv', 'thmFem', 'thmNav', 'thmCorp', 'thmFor', 'thmEar', 'thmMid', 'thmSla', 'toastMsg', 'btn-tab-analyzer', 'btn-tab-extras', 'extHazTitle', 'extHazDesc', 'exportPdfBtn', 'lblCarrierCost', 'lblMargin', 'exportBtn', 'copyBtn'];
     keys.forEach(k => {
         const el = document.getElementById(k);
         if (el) el.innerText = dict[lang][k];
@@ -795,10 +797,21 @@ window.moveBatchQuoteDown = function(batchKey) {
     renderTable();
 };
 
-window.updateBatchQuoteInsurance = function(batchKey, value) {
+window.updateBatchQuoteInsurance = function(batchKey, value, inputEl) {
     const index = getBatchQuoteIndex(batchKey);
     if (index === -1) return;
     appQuotes[index].insurance = parseFloat(value) || 0;
+    const warningEl = document.querySelector(`.batch-insurance-editor[data-batch-key="${batchKey}"] .batch-insurance-warning`);
+    const msg = getInsuranceWarningMessage(parseFloat(value) || 0);
+    if (warningEl) {
+        if (msg) {
+            warningEl.innerText = msg;
+            warningEl.style.display = 'block';
+        } else {
+            warningEl.innerText = '';
+            warningEl.style.display = 'none';
+        }
+    }
     renderTable();
 };
 
@@ -812,20 +825,22 @@ function getBatchExportOptions() {
         cheapestOnly,
         includeSpreadsheetRates,
         requestedRateCount,
-        useInlineLayout: inlineLayout && requestedRateCount <= 3,
-        inlineRateCount: Math.min(Math.max(requestedRateCount, 1), 3)
+        useInlineLayout: inlineLayout && requestedRateCount <= 4,
+        inlineRateCount: Math.min(Math.max(requestedRateCount, 1), 4)
     };
 }
 
 function updateBatchExportControls() {
     const isBatch = !!document.getElementById('batchMode')?.checked;
     const wrapper = document.getElementById('batchExportControls');
+    const showTableView = document.getElementById('batchShowTableView');
     const inlineLayout = document.getElementById('batchInlineLayout');
     const spreadsheetRates = document.getElementById('batchSpreadsheetRates');
     const rateCount = document.getElementById('batchInlineRateCount');
     const helper = document.getElementById('batchInlineHelper');
 
     if (wrapper) wrapper.style.display = isBatch ? 'flex' : 'none';
+    if (showTableView) showTableView.disabled = !isBatch;
     const inlineEnabled = isBatch && !!inlineLayout?.checked;
     if (spreadsheetRates) spreadsheetRates.disabled = !inlineEnabled;
     if (rateCount) rateCount.disabled = !inlineEnabled || !spreadsheetRates?.checked;
@@ -835,7 +850,7 @@ function updateBatchExportControls() {
             helper.innerText = '';
         } else {
             const selected = parseInt(rateCount?.value || '1', 10) || 1;
-            helper.innerText = selected > 3
+            helper.innerText = selected > 4
                 ? dict[currentLang].msgBatchInlineFallback
                 : dict[currentLang].msgBatchInlineHelp;
         }
@@ -859,21 +874,21 @@ function validateInsuranceAmount() {
     if (!insuranceEl || !alertEl) return;
 
     const val = parseFloat(insuranceEl.value);
-    if (isNaN(val) || val <= 0) {
+    const msg = getInsuranceWarningMessage(val);
+    if (!msg) {
         alertEl.style.display = 'none';
         return;
     }
 
-    let msg = '';
-    if (val > 100000) msg = dict[currentLang].insWarnCap;
-    else if (val >= 1000) msg = dict[currentLang].insWarnHigh;
+    alertEl.innerText = msg;
+    alertEl.style.display = 'block';
+}
 
-    if (msg) {
-        alertEl.innerText = msg;
-        alertEl.style.display = 'block';
-    } else {
-        alertEl.style.display = 'none';
-    }
+function getInsuranceWarningMessage(val) {
+    if (isNaN(val) || val <= 0) return '';
+    if (val > 100000) return dict[currentLang].insWarnCap;
+    if (val > 400) return dict[currentLang].insWarnHigh;
+    return '';
 }
 
 function updateFilters() {
@@ -1047,7 +1062,6 @@ function processData() {
     if (!rawText.trim()) return;
 
     const isBatch = document.getElementById('batchMode').checked;
-    if (isBatch && rawText === lastParsedText) return;
     lastParsedText = rawText;
 
     rawText = rawText.replace(/⠀/g, '\t');
@@ -1281,7 +1295,8 @@ function updateSummaryUI() {
         let p1Logo = `<img src="https://dashboard.priority1.com/Images/logo-transparent-mini.png" alt="P1" style="height: 14px; vertical-align: baseline; margin-right: 4px; display: inline-block;">`;
         let idLink = q.id !== '-' ? `<a href="https://dashboard.priority1.com/ltl/quotes/details/${q.id}" target="_blank" style="color: inherit; text-decoration: underline; vertical-align: baseline;">${q.id}</a><span style="margin: 0 4px; vertical-align: baseline;">|</span>` : '';
         let batchActions = isBatch ? `<div class="batch-summary-actions"><button class="secondary-btn batch-action-btn" onclick="moveBatchQuoteUp('${q.batchKey}')">↑ Move Up</button><button class="secondary-btn batch-action-btn" onclick="moveBatchQuoteDown('${q.batchKey}')">↓ Move Down</button><button class="danger-btn batch-action-btn" onclick="removeBatchQuote('${q.batchKey}')">Delete</button></div>` : '';
-        let batchInsuranceControl = isBatch ? `<div class="summary-item summary-full-width batch-insurance-editor"><span class="summary-label">${t.insLabel}</span><div class="batch-insurance-control"><input type="number" min="0" step="0.01" value="${q.insurance ? q.insurance : ''}" oninput="updateBatchQuoteInsurance('${q.batchKey}', this.value)"><span class="batch-insurance-hint">Applied only to ${q.label}</span></div></div>` : '';
+        const batchInsuranceWarning = isBatch ? getInsuranceWarningMessage(parseFloat(q.insurance) || 0) : '';
+        let batchInsuranceControl = isBatch ? `<div class="summary-item summary-full-width batch-insurance-editor" data-batch-key="${q.batchKey}"><span class="summary-label">${t.insLabel}</span><div class="batch-insurance-control"><input type="number" min="0" step="0.01" placeholder="0.00" value="${q.insurance ? q.insurance : ''}" oninput="updateBatchQuoteInsurance('${q.batchKey}', this.value, this)"><span class="batch-insurance-hint"><strong>Per-quote insurance</strong> applied only to ${q.label}</span></div><div class="batch-insurance-warning" style="display:${batchInsuranceWarning ? 'block' : 'none'};">${batchInsuranceWarning || ''}</div></div>` : '';
         let headerBlock = `<div class="summary-item summary-full-width" style="margin-top: 0; padding-top: 0; border-top: none; margin-bottom: 8px; text-align: left;"><div class="summary-label" style="font-size: 0.9rem; color: var(--primary); text-align: left; display: block; white-space: nowrap;">${p1Logo}${idLink}<span style="vertical-align: baseline;">${isBatch ? q.label : 'Priority 1 Quote'}</span></div>${batchActions}</div>`;
 
         html += `<div class="quote-summary" style="display: block; margin-bottom: 16px;"><div class="summary-grid">${headerBlock}<div class="summary-item summary-full-width" style="margin-top: 0; padding-top: 0; border-top: none;"><span class="summary-label">${t.lblFrom}</span><span class="summary-value">${q.from} ${clockHtml}</span></div><div class="summary-item summary-full-width"><span class="summary-label">${t.lblTo}</span><span class="summary-value">${q.to}</span></div><div class="summary-item summary-full-width"><span class="summary-label">${t.lblItems}</span><span class="summary-value" style="font-family: monospace; font-size: 0.85rem; font-weight: normal; line-height: 1.5;">${itemsHtml}</span></div><div class="summary-item summary-full-width" style="display:${showAcc}; padding-top:4px; border-top:none;"><span class="summary-label">${t.lblAcc}</span><span class="summary-value" style="color:var(--warning); font-size: 0.85rem;">${accHtml}</span></div>${batchInsuranceControl}</div>${warnHtml}</div>`;
@@ -1295,6 +1310,7 @@ function renderTable() {
     const headerRow = document.getElementById('tableHeadersRow');
     const btnCopy = document.getElementById('copyBtn');
     const btnPreview = document.getElementById('previewEmailBtn');
+    const resultsPanel = document.getElementById('resultsPanel');
 
     if (appQuotes.length === 0) {
         tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state" id="emptyText">${dict[currentLang].emptyText}</div></td></tr>`;
@@ -1314,7 +1330,11 @@ function renderTable() {
     const showInternalCols = appQuotes.some(q => q.hasInternalCols);
     const isBatch = document.getElementById('batchMode').checked;
     const separateRateTypes = document.getElementById('separateRateTypes') ? document.getElementById('separateRateTypes').checked : false;
+    const showBatchTableView = !isBatch || !!document.getElementById('batchShowTableView')?.checked;
     updateBatchExportControls();
+
+    if (resultsPanel) resultsPanel.style.display = showBatchTableView ? 'block' : 'none';
+    if (!showBatchTableView) return;
 
     document.getElementById('internalColsFilters').style.display = showInternalCols ? 'flex' : 'none';
 
@@ -1500,7 +1520,7 @@ function buildBatchInlineTable(targetQuotes, options, t, th) {
 
     if (!quotesWithRates.length) return '';
 
-    let maxRates = options.cheapestOnly ? 1 : Math.min(options.inlineRateCount, 3);
+    let maxRates = options.cheapestOnly ? 1 : Math.min(options.inlineRateCount, 4);
     if (!options.includeSpreadsheetRates) maxRates = 1;
 
     let headerCells = `
@@ -1510,9 +1530,7 @@ function buildBatchInlineTable(targetQuotes, options, t, th) {
 
     for (let i = 1; i <= maxRates; i++) {
         headerCells += `
-        <th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">Rate ${i}</th>
-        <th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">Transit ${i}</th>
-        <th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">Carrier ${i}</th>`;
+        <th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">Option ${i}</th>`;
     }
 
     let html = `<table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; color: ${th.text}; margin-bottom: 12px;">
@@ -1522,27 +1540,28 @@ function buildBatchInlineTable(targetQuotes, options, t, th) {
         const quoteLink = q.id !== '-' ? `<a href="https://dashboard.priority1.com/ltl/quotes/details/${q.id}" style="color: ${th.primary}; text-decoration: underline;" target="_blank">${q.id}</a>` : '-';
         let rowHtml = `
         <tr>
-            <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">${quoteLink}</td>
-            <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">${q.from || 'N/A'}</td>
-            <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">${q.to || 'N/A'}</td>`;
+            <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: middle;">${quoteLink}</td>
+            <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: middle;">${q.from || 'N/A'}</td>
+            <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: middle;">${q.to || 'N/A'}</td>`;
 
         for (let i = 0; i < maxRates; i++) {
             const rate = rates[i];
             if (rate) {
-                let daysText = String(rate.days).trim();
-                if (daysText !== '') {
-                    if (daysText === '1') daysText += ` ${t.day}`;
-                    else if (!isNaN(daysText) || /^\d+(\s*-\s*\d+)?$/.test(daysText)) daysText += ` ${t.days}`;
-                }
+                const insuranceValue = q.insurance || 0;
+                const totalValue = rate.cost + insuranceValue;
+                const optionDetails = insuranceValue > 0
+                    ? `<div style="color: ${th.primary}; font-weight: bold;">Base: $${rate.cost.toFixed(2)}</div>
+                    <div style="color: ${th.textMuted}; margin-top: 3px;">Insurance: $${insuranceValue.toFixed(2)}</div>
+                    <div style="color: ${th.text}; margin-top: 3px; font-weight: bold;">Total: $${totalValue.toFixed(2)}</div>`
+                    : `<div style="color: ${th.primary}; font-weight: bold;">$${rate.cost.toFixed(2)}</div>`;
                 rowHtml += `
-                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top; color: ${th.primary}; font-weight: bold;">$${rate.cost.toFixed(2)}</td>
-                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">${daysText}</td>
-                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">${rate.normalizedName}</td>`;
+                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: middle;">
+                    <div style="font-weight: bold; color: ${th.text}; margin-bottom: 4px;">${rate.normalizedName}</div>
+                    ${optionDetails}
+                </td>`;
             } else {
                 rowHtml += `
-                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">-</td>
-                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">-</td>
-                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: top;">-</td>`;
+                <td style="border: 1px solid ${th.border}; padding: 10px; vertical-align: middle;">-</td>`;
             }
         }
 
@@ -1592,7 +1611,7 @@ function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
     let html = `<div id="exportWrapper" style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: ${th.text}; ${isPdf ? 'width: 100%;' : 'max-width: 800px;'} background-color: ${th.bg}; padding: 10px; box-sizing: border-box;">`;
 
     if (isBatch && batchExportOptions.useInlineLayout) {
-        if (batchExportOptions.requestedRateCount > 3) {
+        if (batchExportOptions.requestedRateCount > 4) {
             // Fallback to sequential layout below.
         } else {
             html += buildBatchInlineTable(targetQuotes, batchExportOptions, t, th);

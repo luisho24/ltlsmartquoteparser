@@ -267,7 +267,7 @@
             <div class="results-section">
                 <div id="quoteSummaryContainer"></div>
 
-                <div class="panel panel-elevated panel-results" style="padding: 0; overflow: hidden;">
+                <div class="panel panel-elevated panel-results" id="resultsPanel" style="padding: 0; overflow: hidden;">
                     <div class="toolbar-wrapper results-toolbar" style="padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--table-header); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <div class="toolbar-group" style="display: flex; gap: 12px; align-items: center;">
                             <h3 style="margin:0; border:none; padding:0;" id="resultCount">Results</h3>
@@ -281,6 +281,10 @@
                             </label>
                         </div>
                         <div id="batchExportControls" class="batch-export-controls" style="display:none;">
+                            <label class="toolbar-inline-check">
+                                <input type="checkbox" id="batchShowTableView" onchange="renderTable()" checked>
+                                <span id="lblBatchShowTableView">Show table view</span>
+                            </label>
                             <label class="toolbar-inline-check">
                                 <input type="checkbox" id="batchCheapestOnly" onchange="renderTable()">
                                 <span id="lblBatchCheapestOnly">Cheapest rate only</span>
