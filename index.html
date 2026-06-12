@@ -6,6 +6,7 @@
     <title>Smart LTL Quote Analyzer</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="./parser-core.js"></script>
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body onload="initApp()">
@@ -29,6 +30,11 @@
         <div class="checkbox-group" style="margin-bottom: 16px;">
             <input type="checkbox" id="pasteAnywhereToggle" onchange="togglePasteAnywhere(this.checked)">
             <label for="pasteAnywhereToggle" id="lblPasteAnywhere">Enable Paste Anywhere Mode</label>
+        </div>
+
+        <div class="checkbox-group" style="margin-bottom: 16px;">
+            <input type="checkbox" id="roundTripClipboardToggle" onchange="toggleParserSafeCopy(this.checked)">
+            <label for="roundTripClipboardToggle">Include parser-safe plain text in copied export</label>
         </div>
 
         <button class="primary-btn" style="width: 100%; margin-top: 16px;" onclick="closeSettings()">Done</button>
@@ -209,6 +215,7 @@
                 <div id="inputDataWrapper">
                     <textarea id="inputData" placeholder="Paste your full quote text here (Quote Id, From, To, Items, Rates)..."></textarea>
                 </div>
+                <div id="parseFeedback" class="insurance-alert" style="display:none; margin-top: 10px;"></div>
 
                 <div class="btn-group-input">
                     <button class="primary-btn" onclick="processData()" id="analyzeBtn">Parse Quote</button>
@@ -249,7 +256,7 @@
                     </div>
                     <div class="filter-group exp-feature" style="margin-bottom: 12px;">
                         <label id="insLabel">Additional Insurance ($):</label>
-                        <input type="number" id="insuranceInput" placeholder="0.00" min="0" step="0.01" oninput="handleInsuranceInput()">
+                        <input type="text" inputmode="decimal" id="insuranceInput" placeholder="0.00" oninput="handleInsuranceInput()">
                         <div id="insuranceReminder" class="insurance-reminder">Reminder: calculate Insurance first in CABO (Priority1 calculator).</div>
                         <div id="insuranceAlert" class="insurance-alert" style="display:none;"></div>
                     </div>

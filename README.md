@@ -10,6 +10,9 @@ Web tool for reviewing Priority1 LTL quotes, comparing carriers, and exporting q
 - Rule checks for destination type, commodity, liftgate, and cubic/overlength
 - Email-friendly export and preview
 - Hazmat / NMFC quick search
+- Export copy now includes parser-friendly plain text, so pasted output can be parsed again by the tool
+- Parser-safe self-feed copy is now optional and automatically disabled when malformed carriers or suspicious rates are detected
+- Locale-aware rate parsing normalizes values like `1,234.56`, `1.234,56`, and `1234,56`
 
 ## Local preview
 
@@ -30,8 +33,17 @@ http://127.0.0.1:5500/index.html
 - `index.html`: main UI markup
 - `styles.css`: app styles
 - `script.js`: parser, rules, rendering, exports
+- `parser-core.js`: shared pure parsing/export helpers used by the UI and round-trip verification
 - `logos/`: local carrier logos used by the UI
 - `docs/`: planning and technical notes
+
+## Round-trip verification
+
+To confirm exported output can be parsed again:
+
+```bash
+node verify-roundtrip.js
+```
 
 ## Android Planning
 

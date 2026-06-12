@@ -14,9 +14,48 @@ function setDevTabVisibility(isVisible) {
     if (devTabBtn) devTabBtn.style.display = isVisible ? 'inline-flex' : 'none';
 }
 const PASTE_ANYWHERE_STORAGE_KEY = 'ltl-paste-anywhere-v2';
+const ROUNDTRIP_CLIPBOARD_STORAGE_KEY = 'ltl-roundtrip-clipboard-v1';
+let lastParseValidation = null;
+
 function togglePasteAnywhere(isEnabled) {
     try { localStorage.setItem(PASTE_ANYWHERE_STORAGE_KEY, isEnabled ? 'true' : 'false'); } catch (e) {}
     applyPasteAnywhereMode(isEnabled);
+}
+
+function toggleParserSafeCopy(isEnabled) {
+    try { localStorage.setItem(ROUNDTRIP_CLIPBOARD_STORAGE_KEY, isEnabled ? 'true' : 'false'); } catch (e) {}
+}
+
+function isParserSafeCopyEnabled() {
+    const toggle = document.getElementById('roundTripClipboardToggle');
+    return !!(toggle && toggle.checked);
+}
+
+function parseLooseNumber(value) {
+    return window.QuoteParserCore.parseLocaleNumber(value);
+}
+
+function parseNumericInput(value) {
+    const parsed = parseLooseNumber(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function showParseFeedback(message, tone = 'warning') {
+    const feedback = document.getElementById('parseFeedback');
+    if (!feedback) return;
+    feedback.innerText = message;
+    feedback.style.display = message ? 'block' : 'none';
+    feedback.style.borderColor = tone === 'error' ? '#dc2626' : 'var(--warning)';
+    feedback.style.color = tone === 'error' ? '#991b1b' : '';
+}
+
+function clearParseFeedback() {
+    showParseFeedback('');
+}
+
+function summarizeValidationIssues(validation) {
+    if (!validation || !validation.issues || validation.issues.length === 0) return '';
+    return validation.issues.slice(0, 3).join(' ') + (validation.issues.length > 3 ? ' Please review the pasted quote format.' : '');
 }
 
 function isPasteAnywhereEnabled() {
@@ -439,6 +478,9 @@ function initApp() {
         const pasteAnywhereEnabled = localStorage.getItem(PASTE_ANYWHERE_STORAGE_KEY) === 'true';
         const pasteAnywhereToggle = document.getElementById('pasteAnywhereToggle');
         if (pasteAnywhereToggle) pasteAnywhereToggle.checked = pasteAnywhereEnabled;
+        const roundTripClipboardToggle = document.getElementById('roundTripClipboardToggle');
+        const parserSafeCopyEnabled = localStorage.getItem(ROUNDTRIP_CLIPBOARD_STORAGE_KEY) !== 'false';
+        if (roundTripClipboardToggle) roundTripClipboardToggle.checked = parserSafeCopyEnabled;
         toggleExperimental(expEnabled);
         applyPasteAnywhereMode(pasteAnywhereEnabled);
         loadCustomColors();
@@ -707,7 +749,7 @@ window.updateLiftgateField = function(carrierName, field, value) {
     if (!workingLiftgateConfig.limits[carrierName]) return;
     const numericFields = ['l', 'wid', 'h', 'w', 'resiW', 'warnL'];
     workingLiftgateConfig.limits[carrierName][field] = numericFields.includes(field)
-        ? (parseFloat(value) || 0)
+        ? parseNumericInput(value)
         : value;
     persistWorkingLiftgateConfig();
     updateDevStatusBadges();
@@ -800,9 +842,9 @@ window.moveBatchQuoteDown = function(batchKey) {
 window.updateBatchQuoteInsurance = function(batchKey, value, inputEl) {
     const index = getBatchQuoteIndex(batchKey);
     if (index === -1) return;
-    appQuotes[index].insurance = parseFloat(value) || 0;
+    appQuotes[index].insurance = parseNumericInput(value);
     const warningEl = document.querySelector(`.batch-insurance-editor[data-batch-key="${batchKey}"] .batch-insurance-warning`);
-    const msg = getInsuranceWarningMessage(parseFloat(value) || 0);
+    const msg = getInsuranceWarningMessage(parseLooseNumber(value) || 0);
     if (warningEl) {
         if (msg) {
             warningEl.innerText = msg;
@@ -873,7 +915,7 @@ function validateInsuranceAmount() {
     const alertEl = document.getElementById('insuranceAlert');
     if (!insuranceEl || !alertEl) return;
 
-    const val = parseFloat(insuranceEl.value);
+    const val = parseLooseNumber(insuranceEl.value);
     const msg = getInsuranceWarningMessage(val);
     if (!msg) {
         alertEl.style.display = 'none';
@@ -899,7 +941,7 @@ function updateFilters() {
         q.prodType = document.getElementById('productFilter').value;
         q.checkLiftgate = document.getElementById('liftgateFilter').checked;
         q.checkCubic = document.getElementById('cubicFilter').checked;
-        q.insurance = parseFloat(document.getElementById('insuranceInput').value) || 0;
+        q.insurance = parseNumericInput(document.getElementById('insuranceInput').value);
         updateSummaryUI();
         renderTable();
     }
@@ -907,6 +949,7 @@ function updateFilters() {
 
 function clearData() {
     document.getElementById('inputData').value = '';
+    clearParseFeedback();
     document.getElementById('inputData').focus();
     const isBatch = document.getElementById('batchMode').checked;
     if (!isBatch) clearAllDataInternal();
@@ -920,6 +963,7 @@ function clearData() {
 
 function clearAllData() {
     document.getElementById('inputData').value = '';
+    clearParseFeedback();
     document.getElementById('destFilter').value = 'standard';
     document.getElementById('productFilter').value = 'none';
     document.getElementById('insuranceInput').value = '';
@@ -933,6 +977,7 @@ function clearAllData() {
 function clearAllDataInternal() {
     document.getElementById('quoteSummaryContainer').innerHTML = '';
     appQuotes = [];
+    lastParseValidation = null;
     lastParsedText = '';
     batchQuoteCounter = 0;
     renderTable();
@@ -990,70 +1035,33 @@ function canonicalCarrierForRules(name) {
 }
 
 function normalizePriority1Text(value) {
-    return String(value || '')
-        .replace(/[\u2800\u00a0]/g, ' ')
-        .replace(/[\u2000-\u200f\u2028\u2029\u202f\u205f\u2060]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+    return window.QuoteParserCore.normalizePriority1Text(value);
 }
 
 function extractTransitDays(line) {
-    const normalizedLine = normalizePriority1Text(line);
-    const plainNumberMatch = normalizedLine.match(/^(\d{1,3})$/);
-    if (plainNumberMatch) return plainNumberMatch[1];
-    const dayKeywordMatch = normalizedLine.match(/(?:\b|\$)(\d{1,3})\s*Days?\b/i);
-    if (dayKeywordMatch) return dayKeywordMatch[1];
-    const explicit = normalizedLine.match(/\bTransit\s*[:\-]?\s*(\d{1,3})\b/i);
-    if (explicit) return explicit[1];
-    return 'N/A';
+    return window.QuoteParserCore.extractTransitDays(line);
 }
 
 function parseTabSeparatedRateLine(line, rateType, hasInternalCols) {
-    const cols = line.split('\t').map(part => normalizePriority1Text(part)).filter(Boolean);
-    if (cols.length < 5 || !cols.some(col => col.includes('$'))) return null;
+    return window.QuoteParserCore.parseTabSeparatedRateLine(line, rateType, hasInternalCols);
+}
 
-    const carrier = cols[0] || 'Unknown';
-    const customerRateCol = cols.find(col => /^\$[0-9,.]+$/.test(col));
-    if (!customerRateCol) return null;
-
-    const customerCost = parseFloat(customerRateCol.replace(/[$,]/g, '')) || 0;
-    const moneyCols = cols.filter(col => /^\$[0-9,.]+$/.test(col));
-    const carrierCost = hasInternalCols && moneyCols.length > 1 ? parseFloat(moneyCols[1].replace(/[$,]/g, '')) : '';
-
-    const quoteNumber = cols.find((col, idx) => idx > 0 && /[A-Z0-9_-]{5,}/i.test(col) && /\d/.test(col) && !col.includes('$') && !col.includes('/')) || '-';
-
-    const liabilityCol = cols.find(col => /^\$[0-9,.]+\s*\/\s*\$[0-9,.]+$/i.test(col) || /^NEW:/i.test(col)) || '-';
-    let liability = '-';
-    if (liabilityCol !== '-') {
-        const slashMatch = liabilityCol.match(/\$?([0-9,.]+)\s*\/\s*\$?([0-9,.]+)/);
-        if (slashMatch) {
-            liability = `${slashMatch[1]}/${slashMatch[2]}`;
-        } else {
-            const newLiabMatch = liabilityCol.match(/NEW:\s*\$?([0-9,.]+)/i);
-            const usedLiabMatch = liabilityCol.match(/USED:\s*\$?([0-9,.]+)/i);
-            if (newLiabMatch) liability = newLiabMatch[1] + (usedLiabMatch ? `/${usedLiabMatch[1]}` : '');
-        }
-    }
-
-    const service = cols.find(col => /(Standard Rate|Economy|Priority|LTL Standard Transit|Market Rate|Standard Service|Standard|Interline|TLX|TLS|EXCL|Guaranteed|One Rate One Time)/i.test(col)) || 'Standard';
-    const expiration = cols.find(col => /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(col)) || '-';
-    const margin = cols.find(col => /^\d+(?:\.\d+)?%$/.test(col)) || '-';
-    const daysCol = [...cols].reverse().find(col => /^\d{1,3}$/.test(col) || /^\d{1,3}\s*Days?$/i.test(col));
-    const days = daysCol ? extractTransitDays(daysCol) : extractTransitDays(line);
-
+function getCurrentQuoteDefaults() {
     return {
-        id: Math.random().toString(36).substr(2, 9),
-        carrier,
-        cost: customerCost,
-        carrierCost,
-        margin,
-        expiration,
-        quoteNumber,
-        liability,
-        service,
-        days,
-        rateType,
-        isSelected: true
+        destType: document.getElementById('destFilter').value,
+        prodType: document.getElementById('productFilter').value,
+        checkLiftgate: document.getElementById('liftgateFilter').checked,
+        checkCubic: document.getElementById('cubicFilter').checked,
+        insurance: parseNumericInput(document.getElementById('insuranceInput').value)
+    };
+}
+
+function prepareParsedQuote(parsedQuote, isBatch, index, totalCount) {
+    return {
+        ...parsedQuote,
+        batchKey: createBatchKey(),
+        label: totalCount > 1 || isBatch ? `Quote #${appQuotes.length + index + 1}` : 'Priority 1 Quote',
+        ...getCurrentQuoteDefaults()
     };
 }
 
@@ -1064,197 +1072,33 @@ function processData() {
     const isBatch = document.getElementById('batchMode').checked;
     lastParsedText = rawText;
 
-    rawText = rawText.replace(/⠀/g, '\t');
-    rawText = rawText.replace(/Quote Id:\s*([A-Za-z0-9_-]+)(From:)/gi, 'Quote Id: $1\n$2');
-    rawText = rawText.replace(/(\$[0-9,]+\.\d{2})(\d{1,3})\s*(Day|Days)\b/gi, '$1 $2 $3');
-    rawText = rawText.replace(/LTL Rates:/gi, '\nLTL Rates:\n').replace(/Volume Rates:/gi, '\nVolume Rates:\n');
-
-    const lines = rawText.split('\n').map(l => l.trim()).filter(l => l);
-    if (!isBatch) appQuotes = [];
-
-    let q = {
-        batchKey: createBatchKey(),
-        label: isBatch ? `Quote #${appQuotes.length + 1}` : 'Priority 1 Quote',
-        id: '-', from: '-', to: '-', items: [], accessorials: [],
-        maxDims: { weight: 0, length: 0, width: 0, height: 0 },
-        rawRates: [], processedRates: [],
-        destType: document.getElementById('destFilter').value,
-        prodType: document.getElementById('productFilter').value,
-        checkLiftgate: document.getElementById('liftgateFilter').checked,
-        checkCubic: document.getElementById('cubicFilter').checked,
-        insurance: parseFloat(document.getElementById('insuranceInput').value) || 0,
-        hasInternalCols: false
-    };
-
-    const handlingUnits = ['pallet', 'skid', 'bag', 'bale', 'box', 'bucket', 'bundle', 'can', 'carton', 'case', 'coil', 'crate', 'cylinder', 'drum', 'pail', 'piece', 'reel', 'roll', 'tube', 'tote'];
-    let currentRateType = 'LTL';
-    let mode = 'header';
-    let isAdvancedFormat = lines.some(l => l.toLowerCase().includes('carrier cost') || l.toLowerCase().includes('margin'));
-    if (isAdvancedFormat) q.hasInternalCols = true;
-
-    for (let i = 0; i < lines.length; i++) {
-                let line = lines[i];
-                let lowerLine = normalizePriority1Text(line).toLowerCase();
-
-        if (lowerLine === 'accessorials' || lowerLine === 'accessorials:') { mode = 'accessorials'; continue; }
-        if (lowerLine === 'items' || lowerLine.startsWith('items / pallets') || lowerLine === 'items:') { mode = 'items'; continue; }
-        if (lowerLine.includes('ltl rates') || lowerLine.includes('ltl rates:')) { mode = 'rates'; currentRateType = 'LTL'; continue; }
-        if (lowerLine.includes('volume rates') || lowerLine.includes('volume rates:')) { mode = 'rates'; currentRateType = 'Volume'; continue; }
-
-        if (mode === 'header') {
-            if (lowerLine.startsWith('quote id:') || lowerLine.startsWith('quote:')) {
-                let val = line.replace(/quote id:|quote:/i, '').trim();
-                q.id = val ? val : (lines[i + 1] ? lines[i + 1].trim() : '-');
-            } else if (lowerLine.startsWith('from:')) {
-                let val = line.replace(/from:/i, '').trim();
-                q.from = val ? val : (lines[i + 1] ? lines[i + 1].trim() : '-');
-            } else if (lowerLine.startsWith('to:')) {
-                let val = line.replace(/to:/i, '').trim();
-                q.to = val ? val : (lines[i + 1] ? lines[i + 1].trim() : '-');
-            }
-        } else if (mode === 'accessorials') {
-            let parts = line.includes(',') ? line.split(',') : [line];
-            parts.forEach(part => {
-                let cleanPart = part.trim();
-                let lowerPart = cleanPart.toLowerCase();
-                if (!cleanPart || cleanPart.includes('$')) return;
-
-                const isExcessiveLengthMatch = /\b(?:excessive\s+length|overlength|(?:[7-9]|1\d|2\d)\s*(?:ft|feet|foot))\b/i.test(cleanPart);
-
-                const accRules = [
-                    { name: 'Delivery Appointment', keywords: ['delivery appointment', 'appt del', 'appointment del', 'notify before delivery'] },
-                    { name: 'Pickup Appointment', keywords: ['pickup appointment', 'appt pu', 'appointment pu', 'notify before pickup'] },
-                    { name: 'Appointment / Notify', keywords: ['appointment', 'appt', 'notify', 'notification'] },
-                    { name: 'Residential Delivery', keywords: ['residential delivery', 'residence delivery', 'residential del'] },
-                    { name: 'Residential Pickup', keywords: ['residential pickup', 'residence pickup', 'residential pu'] },
-                    { name: 'Residential', keywords: ['residential', 'residence'] },
-                    { name: 'Lift Gate Delivery', keywords: ['lift gate delivery', 'liftgate delivery', 'lift-gate delivery', 'liftgate del', 'lift gate del'] },
-                    { name: 'Lift Gate Pickup', keywords: ['lift gate pickup', 'liftgate pickup', 'lift-gate pickup', 'liftgate pu', 'lift gate pu'] },
-                    { name: 'Lift Gate', keywords: ['lift gate', 'liftgate', 'lift-gate'] },
-                    { name: 'Inside Delivery', keywords: ['inside delivery', 'inside del'] },
-                    { name: 'Inside Pickup', keywords: ['inside pickup', 'inside pu'] },
-                    { name: 'Inside', keywords: ['inside'] },
-                    { name: 'Limited Access Delivery', keywords: ['limited access delivery', 'limited access del'] },
-                    { name: 'Limited Access Pickup', keywords: ['limited access pickup', 'limited access pu'] },
-                    { name: 'Limited Access', keywords: ['limited access'] },
-                    { name: 'Hazmat', keywords: ['hazardous', 'hazmat'] },
-                    { name: 'Protect From Freeze', keywords: ['protect from freeze', 'freeze'] }
-                ];
-
-                let matchedRule = accRules.find(r => r.keywords.some(kw => lowerPart.includes(kw)));
-                let finalName = isExcessiveLengthMatch ? 'Excessive Length' : (matchedRule ? matchedRule.name : cleanPart);
-                let countExisting = q.accessorials.filter(a => a === finalName).length;
-                let maxAllowed = finalName === 'Excessive Length' ? 1 : ((finalName.includes('Delivery') || finalName.includes('Pickup')) ? 1 : 2);
-                if (finalName.length < 40 && countExisting < maxAllowed) q.accessorials.push(finalName);
-            });
-        } else if (mode === 'items') {
-            if (handlingUnits.some(unit => lowerLine.includes(unit)) && /\d/.test(line)) {
-                let isSubItem = line.startsWith('-');
-                let cleanLine = line.replace(/^"|"$/g, '');
-                let itemObj;
-                if (isSubItem) {
-                    let noDimsLine = cleanLine.replace(/\s*-\s*[\d.]+\s*(?:in|"|cm|”|'')?\s*x\s*[\d.]+\s*(?:in|"|cm|”|'')?\s*x\s*[\d.]+\s*(?:in|"|cm|”|'')?/gi, '');
-                    itemObj = { text: noDimsLine.replace(/^\s*-\s*/, '').trim(), isSub: true };
-                } else {
-                    itemObj = { text: cleanLine, isSub: false };
-                    const wMatch = line.match(/([\d.,]+)\s*(lbs|kg)/i);
-                    if (wMatch) {
-                        let w = parseFloat(wMatch[1].replace(/,/g, ''));
-                        if (wMatch[2].toLowerCase() === 'kg') w *= 2.20462;
-                        if (w > q.maxDims.weight) q.maxDims.weight = w;
-                    }
-                    const dMatch = line.match(/([\d.]+)\s*(in|"|cm|”|'')?\s*x\s*([\d.]+)\s*(in|"|cm|”|'')?\s*x\s*([\d.]+)/i);
-                    if (dMatch) {
-                        let l = parseFloat(dMatch[1]), w = parseFloat(dMatch[3]), h = parseFloat(dMatch[5]), unit = (dMatch[2] || dMatch[4] || dMatch[6] || '').toLowerCase();
-                        if (unit === 'cm') { l /= 2.54; w /= 2.54; h /= 2.54; }
-                        if (l > q.maxDims.length) q.maxDims.length = l;
-                        if (w > q.maxDims.width) q.maxDims.width = w;
-                        if (h > q.maxDims.height) q.maxDims.height = h;
-                    }
-                }
-                q.items.push(itemObj);
-            }
-        } else if (mode === 'rates') {
-            if (/carrier\s*service\s*level/i.test(lowerLine) || /customer\s*cost/i.test(lowerLine) || /carrier\s*quote/i.test(lowerLine) || (lowerLine.includes('carrier') && lowerLine.includes('rate'))) continue;
-
-            const tabParsedRate = parseTabSeparatedRateLine(line, currentRateType, q.hasInternalCols);
-            if (tabParsedRate) {
-                q.rawRates.push(tabParsedRate);
-                continue;
-            }
-
-            if (line.includes('$')) {
-                line = line.replace(/(\$[0-9,]+\.\d{2})(\d{1,3})(?=\s*Days?\b)/i, '$1 $2');
-
-                let liability = '-';
-                let newLiabMatch = line.match(/NEW:\s*\$?([0-9,.]+)/i);
-                let usedLiabMatch = line.match(/USED:\s*\$?([0-9,.]+)/i);
-                let slashLiabMatch = line.match(/\$?([0-9,.]+)\s*\/\s*\$?([0-9,.]+)/);
-                if (newLiabMatch) {
-                    liability = newLiabMatch[1];
-                    if (usedLiabMatch) liability += '/' + usedLiabMatch[1];
-                    line = line.replace(/NEW:\s*\$?[0-9,.]+/i, '').replace(/USED:\s*\$?[0-9,.]+/i, '');
-                } else if (slashLiabMatch) {
-                    liability = slashLiabMatch[1] + '/' + slashLiabMatch[2];
-                    line = line.replace(slashLiabMatch[0], '');
-                } else {
-                    let rawNumbers = [...line.matchAll(/(?<!\$)\b(\d+(?:\.\d+)?)\b/g)].map(m => parseFloat(m[1]));
-                    let liabNumbers = rawNumbers.filter(n => n > 50 && n % 1 === 0);
-                    if (liabNumbers.length > 0) liability = liabNumbers.join('/');
-                }
-
-                let carrier = 'Unknown';
-                let firstDollarIdx = line.indexOf('$');
-                if (firstDollarIdx !== -1) {
-                    let prefix = line.substring(0, firstDollarIdx).trim().replace(/[\t]+/g, ' ');
-                    carrier = prefix.replace(/\s*(LTL|Volume)$/i, '').trim();
-                }
-
-                let dollarPrices = [...line.matchAll(/\$([0-9,.]+)/g)].map(m => parseFloat(m[1].replace(/,/g, '')));
-                let customerCost = dollarPrices[0] || 0;
-                let carrierCost = '';
-                if (q.hasInternalCols && dollarPrices.length >= 2) carrierCost = dollarPrices[1];
-
-                let service = 'Standard';
-                let serviceMatch = line.match(/(Standard Rate|Economy|Priority|LTL Standard Transit|Market Rate|Standard Service|Standard|Interline|TLX|TLS|EXCL|Guaranteed|One Rate One Time)/i);
-                if (serviceMatch) service = serviceMatch[1];
-
-                let days = extractTransitDays(line);
-
-                let expMatch = line.match(/(\d{1,2}\/\d{1,2}\/\d{2,4})/);
-                let expiration = expMatch ? expMatch[1] : '-';
-                let marginMatch = line.match(/(\d+(?:\.\d+)?)%/);
-                let margin = marginMatch ? marginMatch[1] + '%' : '-';
-
-                let quoteNum = '-';
-                let tokens = line.split(/[\s\t]+/);
-                let rateFound = false;
-                for (let token of tokens) {
-                    if (!rateFound) { if (token.includes('$')) rateFound = true; continue; }
-                    if (token.length >= 6 && /^[A-Z0-9_-]+$/i.test(token) && /\d/.test(token) && !/^(Standard|Economy|Priority|Market|Interline|Guaranteed)$/i.test(token)) { quoteNum = token; break; }
-                }
-
-                q.rawRates.push({ id: Math.random().toString(36).substr(2, 9), carrier, cost: customerCost, carrierCost, margin, expiration, quoteNumber: quoteNum, liability, service, days, rateType: currentRateType, isSelected: true });
-            } else if (q.rawRates.length > 0) {
-                let lastRate = q.rawRates[q.rawRates.length - 1];
-                let expMatch = line.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
-                if (expMatch && lastRate.expiration === '-') lastRate.expiration = expMatch[1];
-                let marginMatch = line.match(/(\d+(?:\.\d+)?)%/);
-                if (marginMatch && lastRate.margin === '-') lastRate.margin = marginMatch[1] + '%';
-            }
-        }
-    }
-
-    if (q.rawRates.length === 0) {
+    const parsedQuotes = window.QuoteParserCore.parseQuoteText(rawText, getCurrentQuoteDefaults());
+    const validation = window.QuoteParserCore.validateParsedQuotes(parsedQuotes);
+    lastParseValidation = validation;
+    if (parsedQuotes.length === 0) {
+        showParseFeedback('No valid rates were detected. Please verify the quote contains recognizable carrier, rate, and transit fields.', 'error');
         document.querySelector('#quotesTable tbody').innerHTML = `<tr><td colspan="8"><div class="empty-state" style="color: var(--warning); font-weight: bold;">${dict[currentLang].waitingRates}</div></td></tr>`;
         return;
     }
 
-    appQuotes.push(q);
-    if (isBatch) renumberBatchLabels();
+    if (validation.blockParsing) {
+        showParseFeedback(`Parsing stopped because the quote looks malformed. ${summarizeValidationIssues(validation)}`, 'error');
+        return;
+    }
+
+    if (validation.allowParserSafeExport) clearParseFeedback();
+    else showParseFeedback(`Parsed with warnings. Parser-safe self-feed export will be disabled for this quote. ${summarizeValidationIssues(validation)}`, 'warning');
+
+    if (!isBatch) appQuotes = [];
+    parsedQuotes.forEach((quote, index) => appQuotes.push(prepareParsedQuote(quote, isBatch, index, parsedQuotes.length)));
+    if (appQuotes.length > 1 || isBatch) renumberBatchLabels();
     updateSummaryUI();
     renderTable();
     startLiveClocks();
+}
+
+function buildParseableClipboardText(targetQuotes = appQuotes) {
+    return window.QuoteParserCore.buildParseableQuoteText(targetQuotes);
 }
 
 function updateSummaryUI() {
@@ -1295,7 +1139,7 @@ function updateSummaryUI() {
         let p1Logo = `<img src="https://dashboard.priority1.com/Images/logo-transparent-mini.png" alt="P1" style="height: 14px; vertical-align: baseline; margin-right: 4px; display: inline-block;">`;
         let idLink = q.id !== '-' ? `<a href="https://dashboard.priority1.com/ltl/quotes/details/${q.id}" target="_blank" style="color: inherit; text-decoration: underline; vertical-align: baseline;">${q.id}</a><span style="margin: 0 4px; vertical-align: baseline;">|</span>` : '';
         let batchActions = isBatch ? `<div class="batch-summary-actions"><button class="secondary-btn batch-action-btn" onclick="moveBatchQuoteUp('${q.batchKey}')">↑ Move Up</button><button class="secondary-btn batch-action-btn" onclick="moveBatchQuoteDown('${q.batchKey}')">↓ Move Down</button><button class="danger-btn batch-action-btn" onclick="removeBatchQuote('${q.batchKey}')">Delete</button></div>` : '';
-        const batchInsuranceWarning = isBatch ? getInsuranceWarningMessage(parseFloat(q.insurance) || 0) : '';
+        const batchInsuranceWarning = isBatch ? getInsuranceWarningMessage(parseLooseNumber(q.insurance) || 0) : '';
         let batchInsuranceControl = isBatch ? `<div class="summary-item summary-full-width batch-insurance-editor" data-batch-key="${q.batchKey}"><span class="summary-label">${t.insLabel}</span><div class="batch-insurance-control"><input type="number" min="0" step="0.01" placeholder="0.00" value="${q.insurance ? q.insurance : ''}" oninput="updateBatchQuoteInsurance('${q.batchKey}', this.value, this)"><span class="batch-insurance-hint"><strong>Per-quote insurance</strong> applied only to ${q.label}</span></div><div class="batch-insurance-warning" style="display:${batchInsuranceWarning ? 'block' : 'none'};">${batchInsuranceWarning || ''}</div></div>` : '';
         let headerBlock = `<div class="summary-item summary-full-width" style="margin-top: 0; padding-top: 0; border-top: none; margin-bottom: 8px; text-align: left;"><div class="summary-label" style="font-size: 0.9rem; color: var(--primary); text-align: left; display: block; white-space: nowrap;">${p1Logo}${idLink}<span style="vertical-align: baseline;">${isBatch ? q.label : 'Priority 1 Quote'}</span></div>${batchActions}</div>`;
 
@@ -1358,7 +1202,7 @@ function renderTable() {
         const prodType = isBatch ? q.prodType : document.getElementById('productFilter').value;
         const checkLiftgate = isBatch ? q.checkLiftgate : document.getElementById('liftgateFilter').checked;
         const checkCubic = isBatch ? q.checkCubic : document.getElementById('cubicFilter').checked;
-        const insVal = isBatch ? (q.insurance || 0) : (parseFloat(document.getElementById('insuranceInput').value) || 0);
+        const insVal = isBatch ? (q.insurance || 0) : parseNumericInput(document.getElementById('insuranceInput').value);
 
         let isRes = q.accessorials.some(a => a.toLowerCase().includes('residential') || a.toLowerCase().includes('residence'));
         let needsLiftgate = checkLiftgate || q.accessorials.some(a => a.toLowerCase().includes('lift'));
@@ -1623,7 +1467,7 @@ function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
     targetQuotes.forEach(q => {
         let allowedRates = getExportRatesForQuote(q, batchExportOptions);
         if (allowedRates.length === 0) return;
-        let insVal = isBatch ? (q.insurance || 0) : (document.getElementById('insuranceInput') ? (parseFloat(document.getElementById('insuranceInput').value) || 0) : 0);
+        let insVal = isBatch ? (q.insurance || 0) : (document.getElementById('insuranceInput') ? parseNumericInput(document.getElementById('insuranceInput').value) : 0);
         let itemsHtml = q.items.length > 0 ? q.items.map(i => i.isSub ? `<li style="list-style-type: none; font-size: 12px; color: ${th.textMuted}; margin-left: 12px; margin-top: 2px;">↳ ${i.text}</li>` : `<li style="margin-top: 4px;">${i.text}</li>`).join('') : '<li>N/A</li>';
         let counts = {}; q.accessorials.forEach(a => counts[a] = (counts[a] || 0) + 1);
         let accHtmlArray = Object.entries(counts).map(([a, c]) => c > 1 ? `${a} (x${c})` : a);
@@ -1727,12 +1571,16 @@ function openEmailPreview() {
 function closeEmailPreview() { document.getElementById('emailPreviewModal').style.display = 'none'; }
 function copyForEmailFromPreview() { closeEmailPreview(); copyForEmail(); }
 
-function copyForEmail() {
+async function copyForEmail() {
     if (appQuotes.length === 0) return;
     const t = dict[currentLang];
     const currentTheme = document.documentElement.getAttribute('data-theme');
     document.documentElement.setAttribute('data-theme', 'light');
     const html = getReportHTML(false);
+    const plainText = buildParseableClipboardText();
+    const genericPlainText = appQuotes.map(q => `${q.id || '-'} | ${q.from || '-'} -> ${q.to || '-'}`).join('\n');
+    const validation = window.QuoteParserCore.validateParsedQuotes(appQuotes);
+    const includeParserSafePlainText = isParserSafeCopyEnabled() && validation.allowParserSafeExport;
     const container = document.createElement('div');
     container.innerHTML = html;
     container.style.position = 'absolute';
@@ -1740,18 +1588,45 @@ function copyForEmail() {
     container.style.backgroundColor = '#ffffff';
     document.body.appendChild(container);
     try {
-        const range = document.createRange();
-        range.selectNodeContents(container);
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        document.execCommand('copy');
+        let copied = false;
+        if (navigator.clipboard?.write && window.ClipboardItem && window.Blob) {
+            const item = new ClipboardItem(includeParserSafePlainText ? {
+                'text/html': new Blob([html], { type: 'text/html' }),
+                'text/plain': new Blob([plainText], { type: 'text/plain' })
+            } : {
+                'text/html': new Blob([html], { type: 'text/html' }),
+                'text/plain': new Blob([genericPlainText], { type: 'text/plain' })
+            });
+            await navigator.clipboard.write([item]);
+            copied = true;
+        }
+
+        if (!copied) {
+            const onCopy = (event) => {
+                event.preventDefault();
+                event.clipboardData.setData('text/html', html);
+                event.clipboardData.setData('text/plain', includeParserSafePlainText ? plainText : genericPlainText);
+            };
+            container.addEventListener('copy', onCopy);
+            const range = document.createRange();
+            range.selectNodeContents(container);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            copied = document.execCommand('copy');
+            container.removeEventListener('copy', onCopy);
+            if (!copied) throw new Error('Copy command failed');
+        }
+
         const btn = document.getElementById('copyBtn');
         const originalText = t.copyBtn;
         btn.innerText = '✅ ' + t.msgCopied;
         btn.style.backgroundColor = '#10b981';
         btn.style.color = '#ffffff';
-        showToast(t.toastMsg);
+        showToast(includeParserSafePlainText ? t.toastMsg : `${t.toastMsg} (parser-safe self-feed disabled)`);
+        if (!includeParserSafePlainText) {
+            showParseFeedback(`Copied without parser-safe plain text because suspicious carrier/rate data was detected. ${summarizeValidationIssues(validation)}`, 'warning');
+        }
         setTimeout(() => { btn.innerText = originalText; btn.style.backgroundColor = ''; btn.style.color = ''; }, 2500);
     } catch (err) {
         alert('Error copying text. Your browser might block this action inside Google Sites.');
