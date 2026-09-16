@@ -75,6 +75,7 @@
         'btn-tab-analyzer': 'Quote workspace', 'btn-tab-extras': 'Reference library',
         extHazTitle: 'Hazmat / NMFC reference', lblEmailTheme: 'Email theme',
         placeholder: 'Quote Id: …\n\nFrom: …\nTo: …\n\nItems:\n…\n\nLTL Rates:\n…',
+        emptyText: 'Paste quote data in the left panel.',
         disclaimerMsg: text.en.warning
     });
     Object.assign(dict.es, {
@@ -84,6 +85,7 @@
         'btn-tab-analyzer': 'Cotizaciones', 'btn-tab-extras': 'Referencias',
         extHazTitle: 'Referencia Hazmat / NMFC', lblEmailTheme: 'Tema del correo',
         placeholder: 'Quote Id: …\n\nFrom: …\nTo: …\n\nItems:\n…\n\nLTL Rates:\n…',
+        emptyText: 'Pega los datos en el panel izquierdo.',
         disclaimerMsg: text.es.warning
     });
 
