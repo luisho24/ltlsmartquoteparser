@@ -2,3 +2,11 @@
 .gradle-dist/
 app/build/
 build/
+
+# Feedback service: never publish private data, environment or local test caches.
+feedback-service/.env
+feedback-service/data/
+__pycache__/
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal

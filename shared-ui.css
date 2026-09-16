@@ -1,0 +1,35 @@
+/* Scoped controls shared by both interfaces; no changes to quote/email styling. */
+.ltl-switch{font:inherit;font-size:12px;font-weight:600;padding:8px 12px;border:1px solid var(--border,#d5deda);border-radius:5px;background:var(--card,#fff);color:var(--text,#243b34);cursor:pointer;white-space:nowrap}
+.ltl-switch:hover{border-color:var(--primary,#286452)}
+.ltl-dialog{color-scheme:light;box-sizing:border-box;width:min(540px,calc(100vw - 32px));max-height:calc(100dvh - 40px);margin:auto;padding:28px;border:1px solid #d8e0dc;border-radius:10px;color:#243730;background:#fff;box-shadow:0 18px 70px #102b3430;font:14px/1.55 Arial,Helvetica,sans-serif;text-align:left;overflow:auto}
+.ltl-dialog::backdrop{background:#122b3690}
+.ltl-dialog *{box-sizing:border-box}
+.ltl-dialog h2{font-size:23px;line-height:1.25;letter-spacing:-.5px;margin:9px 0 12px;color:inherit;border:0;padding:0}
+.ltl-dialog p{margin:10px 0 16px;color:#52645b}
+.ltl-eyebrow{font-size:10px;letter-spacing:1.4px;font-weight:700;color:#487260}
+.ltl-dialog-head{display:flex;align-items:flex-start;gap:16px;justify-content:space-between}
+.ltl-dialog button{width:auto;display:inline-block;position:static;transform:none;font:600 13px/1.4 Arial,sans-serif;border:1px solid #cfdad4;background:#fff;color:#304e40;border-radius:5px;padding:10px 13px;cursor:pointer;box-shadow:none}
+.ltl-dialog button.ltl-primary{background:#285b48;color:#fff;border-color:#285b48}
+.ltl-dialog button.ltl-close,.ltl-dialog button.ltl-link{background:transparent;border:0;padding:8px 0;color:#52645b;font-weight:400}
+.ltl-dialog button.ltl-close{font-size:12px;white-space:nowrap}
+.ltl-dialog .ltl-actions{display:flex;gap:9px;flex-wrap:wrap;margin:20px 0 4px}
+.ltl-dialog form{display:grid;gap:13px;margin-top:20px}
+.ltl-dialog label{display:grid;gap:5px;color:inherit;font-size:13px;font-weight:600;margin:0}
+.ltl-dialog input:not([type=checkbox]),.ltl-dialog textarea,.ltl-dialog select{font:14px/1.5 Arial,sans-serif;border:1px solid #ccd8d1;background:#fff;color:#243730;padding:9px 10px;border-radius:5px;box-shadow:none;min-width:0;display:block;width:100%;margin:0}
+.ltl-dialog textarea{resize:vertical;min-height:84px}
+.ltl-dialog select{height:40px}
+.ltl-dialog summary{cursor:pointer;font-size:13px;color:#426450;margin-bottom:5px}
+.ltl-dialog .ltl-check{display:flex;align-items:flex-start;gap:8px;font-weight:400}
+.ltl-dialog input[type=checkbox]{width:16px;height:16px;margin-top:2px;accent-color:#285b48;flex-shrink:0}
+.ltl-dialog .ltl-small{font-size:11px;line-height:1.55;margin:0;color:#637269}
+.ltl-dialog .ltl-feedback-status{font-size:13px;line-height:1.5;margin:0;color:#865520;overflow-wrap:anywhere}
+.ltl-dialog .ltl-feedback-status[data-success=true]{color:#216044}
+.ltl-dialog :focus-visible,.ltl-switch:focus-visible{outline:2px solid #418768;outline-offset:3px}
+.ltl-dialog button:disabled{cursor:not-allowed;opacity:.5}
+.ltl-dialog .ltl-honeypot{position:absolute;left:-10000px;top:0;width:1px;height:1px;overflow:hidden}
+[data-theme=dark] .ltl-dialog{color-scheme:dark;background:#172823;border-color:#40564d;color:#ebf1ed}
+[data-theme=dark] .ltl-dialog :is(input:not([type=checkbox]),textarea,select,button:not(.ltl-primary)){background:#1d3229;color:#ebf1ed;border-color:#40564d}
+[data-theme=dark] .ltl-dialog :is(p,.ltl-small,.ltl-eyebrow,summary){color:#b2c6bb}
+[data-theme=dark] .ltl-dialog .ltl-feedback-status{color:#f0c28c}
+[data-theme=dark] .ltl-dialog .ltl-feedback-status[data-success=true]{color:#8cdfb3}
+@media(max-width:620px){.ltl-dialog{padding:20px}.header-utilities{flex-wrap:wrap}.ltl-switch{font-size:11px;padding:6px 9px}}

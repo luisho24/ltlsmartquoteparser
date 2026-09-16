@@ -1,0 +1,16 @@
+# Proposed hostname, NOT provisioned. Add a verified DNS record first.
+# Merge this independent site block into the HOST Caddy config; do not replace it.
+feedback.partspilot.lat {
+    @api path /v1/challenge /v1/feedback /healthz
+    handle @api {
+        request_body {
+            max_size 16KB
+        }
+        reverse_proxy 127.0.0.1:8787 {
+            header_up X-Forwarded-For {remote_host}
+        }
+    }
+    handle {
+        respond "Not found" 404
+    }
+}

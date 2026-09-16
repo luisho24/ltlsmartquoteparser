@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="./experience.js"></script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart LTL Quote Analyzer</title>
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="./parser-core.js"></script>
+<link rel="stylesheet" href="./styles-classic.css">
+<link rel="stylesheet" href="./shared-ui.css">
+</head>
+<body onload="initApp()">
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-overlay" style="display: none;">
+<div class="modal-content panel" style="max-height: 90vh; overflow-y: auto;">
+<h3 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
+<span>⚙️ Settings</span>
+<button onclick="closeSettings()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text);">✖</button>
+</h3>
+
+<div class="checkbox-group" style="margin-bottom: 16px; border: 1px solid var(--primary); background: var(--toggle-bg);">
+<input type="checkbox" id="expToggle" onchange="toggleExperimental(this.checked)">
+<label for="expToggle" style="font-weight: bold; color: var(--primary);">Enable Experimental Features</label>
+</div>
+<p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0; margin-bottom: 16px; line-height: 1.3;">
+Unlocks Batch Mode, PDF/CSV Exports, Destination Types, Commodities, Additional Insurance, and strict Rule Checks.
+</p>
+
+<div class="checkbox-group" style="margin-bottom: 16px;">
+<input type="checkbox" id="pasteAnywhereToggle" onchange="togglePasteAnywhere(this.checked)">
+<label for="pasteAnywhereToggle" id="lblPasteAnywhere">Enable Paste Anywhere Mode</label>
+</div>
+
+<div class="checkbox-group" style="margin-bottom: 16px;">
+<input type="checkbox" id="roundTripClipboardToggle" onchange="toggleParserSafeCopy(this.checked)">
+<label for="roundTripClipboardToggle">Include parser-safe plain text in copied export</label>
+</div>
+
+<button class="primary-btn" style="width: 100%; margin-top: 16px;" onclick="closeSettings()">Done</button>
+</div>
+</div>
+
+<!-- Branding Modal -->
+<div id="brandingModal" class="modal-overlay" style="display: none; z-index: 2550;">
+<div class="modal-content panel" style="max-height: 90vh; overflow-y: auto;">
+<h3 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
+<span>🎨 Email Custom Branding</span>
+<button onclick="closeBranding()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text);">✖</button>
+</h3>
+<p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0; margin-bottom: 12px; line-height: 1.3;">
+Edit colors below to automatically trigger the Live Preview.
+</p>
+
+<div class="color-grid">
+<div class="color-item">
+<label>Primary Color</label>
+<input type="color" id="cPrimary" value="#2563eb" oninput="handleColorChange()">
+</div>
+<div class="color-item">
+<label>Table Header</label>
+<input type="color" id="cHeader" value="#f1f5f9" oninput="handleColorChange()">
+</div>
+<div class="color-item">
+<label>Background</label>
+<input type="color" id="cBg" value="#ffffff" oninput="handleColorChange()">
+</div>
+<div class="color-item">
+<label>Text Color</label>
+<input type="color" id="cText" value="#333333" oninput="handleColorChange()">
+</div>
+<div class="color-item">
+<label>Border</label>
+<input type="color" id="cBorder" value="#cbd5e1" oninput="handleColorChange()">
+</div>
+<div class="color-item">
+<label>Accent (Headers)</label>
+<input type="color" id="cAcc" value="#166534" oninput="handleColorChange()">
+</div>
+</div>
+
+<button class="primary-btn" style="width: 100%; margin-top: 16px;" onclick="closeBranding()">Done</button>
+</div>
+</div>
+
+<!-- Email Preview Modal -->
+<div id="emailPreviewModal" class="modal-overlay" style="display: none; z-index: 2500;">
+<div class="modal-content panel preview-panel" style="width: 95%; max-width: 850px; height: 90vh; display: flex; flex-direction: column;">
+<h3 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+<span>👁️ Live Email Preview</span>
+<button onclick="closeEmailPreview()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text);">✖</button>
+</h3>
+<div id="previewContainer" style="flex-grow: 1; overflow-y: auto; background: #e2e8f0; padding: 20px; border-radius: 6px; display: flex; justify-content: center;"></div>
+<div style="flex-shrink: 0; padding-top: 12px; display: flex; gap: 12px;">
+<button class="secondary-btn" style="flex:1;" onclick="closeEmailPreview()">Close Preview</button>
+<button class="primary-btn" style="flex:1;" onclick="copyForEmailFromPreview()">📋 Copy This Design</button>
+</div>
+</div>
+</div>
+
+<!-- Bug Report Modal -->
+<div id="bugReportModal" class="modal-overlay" style="display: none; z-index: 2600;">
+<div class="modal-content panel" style="width: 95%; max-width: 760px; max-height: 90vh; overflow-y: auto;">
+<h3 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
+<span>🐞 Report Bug</span>
+<button onclick="closeBugReport()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text);">✖</button>
+</h3>
+<p class="bug-report-intro">Open the external feedback form and paste a ready-to-use report with the current app context.</p>
+
+<div class="filter-group">
+<label for="bugType">Type</label>
+<select id="bugType" onchange="updateBugReportPreview()">
+<option value="Bug Report">Bug Report</option>
+<option value="Feature Suggestion">Feature Suggestion</option>
+</select>
+</div>
+
+<div class="filter-group">
+<label for="bugTitle">Title</label>
+<input type="text" id="bugTitle" placeholder="Example: Transit Days show as N/A for Priority1 export" oninput="updateBugReportPreview()">
+</div>
+
+<div class="filter-group">
+<label for="bugSummary">What happened?</label>
+<textarea id="bugSummary" class="bug-textarea" placeholder="Describe the bug, what you expected, and how to reproduce it." oninput="updateBugReportPreview()"></textarea>
+</div>
+
+<div class="filter-group">
+<label for="bugSteps">Steps to reproduce</label>
+<textarea id="bugSteps" class="bug-textarea" placeholder="1. Paste quote...&#10;2. Click Parse Quote...&#10;3. Observe issue..." oninput="updateBugReportPreview()"></textarea>
+</div>
+
+<div class="filter-group">
+<label for="bugContextPreview">Context preview</label>
+<textarea id="bugContextPreview" class="bug-textarea bug-context-preview" readonly></textarea>
+</div>
+
+<div class="bug-report-actions">
+<button class="secondary-btn" onclick="copyBugReport()">📋 Copy Report</button>
+<button class="primary-btn" onclick="openBugForm()">↗ Open Feedback Form</button>
+</div>
+</div>
+</div>
+
+<div class="container">
+<div class="hero-shell">
+<div class="header-container">
+<div class="hero-copy">
+<div class="hero-kicker">Priority1 Workflow Tool</div>
+<div class="hero-title-row">
+<button class="hero-settings-btn" onclick="openSettings()" title="Settings">⚙️</button>
+<div>
+<h1 id="mainTitle">📊 Smart LTL Quote Parser</h1>
+</div>
+</div>
+</div>
+<div class="controls-group hero-controls">
+<div class="control-card control-card-action">
+<span class="control-card-label">Support</span>
+<button class="hero-action-btn" onclick="openBugReport()">🐞 Report Bug</button>
+</div>
+<div class="control-card control-card-action">
+<span class="control-card-label">Branding</span>
+<button class="hero-action-btn" onclick="openBranding()">🎨 Custom Branding</button>
+</div>
+<div class="control-card">
+<span class="control-card-label">Mode</span>
+<div class="toggle-group" title="App Interface Theme">
+<button class="toggle-btn active" onclick="setTheme('light')" id="btn-light">☀️</button>
+<button class="toggle-btn" onclick="setTheme('dark')" id="btn-dark">🌙</button>
+</div>
+</div>
+<div class="control-card">
+<span class="control-card-label">Language</span>
+<div class="toggle-group">
+<button class="toggle-btn" onclick="setLang('es')" id="btn-es">ES</button>
+<button class="toggle-btn active" onclick="setLang('en')" id="btn-en">EN</button>
+</div>
+</div>
+<div class="control-card control-card-select">
+<span class="control-card-label">Theme</span>
+<select id="appThemeSelect" class="theme-select" onchange="setAppTheme(this.value)">
+<option value="default" id="appThmDef">🎨 Default Theme</option>
+<option value="monochrome" id="appThmMono">⚫ Monochrome</option>
+<option value="vivid" id="appThmViv">🌈 Vivid</option>
+<option value="feminine" id="appThmFem">🌸 Feminine</option>
+<option value="navy" id="appThmNav">🌌 Navy</option>
+<option value="corporate" id="appThmCorp">🏢 Corporate</option>
+<option value="forest" id="appThmFor">🌲 Forest</option>
+<option value="earth" id="appThmEar">🟤 Earthy</option>
+<option value="midnight" id="appThmMid">🌙 Midnight</option>
+<option value="slate" id="appThmSla">📓 Slate</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+
+<div class="tabs-nav">
+<button class="tab-btn active" id="btn-tab-analyzer" onclick="switchTab('analyzer')">Parser</button>
+<button class="tab-btn" id="btn-tab-extras" onclick="switchTab('extras')">Extras</button>
+<button class="tab-btn" id="btn-tab-dev" onclick="switchTab('dev')" style="display:none;">Dev</button>
+</div>
+
+<div id="view-analyzer" class="tab-pane active">
+<div class="grid">
+<div class="panel input-section panel-elevated">
+<h3 id="step1Title">1. Quote Data Input</h3>
+<div id="pasteAnywhereBanner" class="paste-anywhere-banner" style="display:none;">
+<div class="paste-anywhere-banner-kicker">Quick Capture Mode</div>
+<div class="paste-anywhere-banner-title">Paste Anywhere Mode is active</div>
+<div class="paste-anywhere-banner-text">Press <strong>Ctrl + V</strong> anywhere on the page to send a quote directly into the parser.</div>
+<div class="paste-anywhere-banner-hint">The quote input field is hidden while this mode is enabled.</div>
+</div>
+<div id="inputDataWrapper">
+<textarea id="inputData" placeholder="Paste your full quote text here (Quote Id, From, To, Items, Rates)..."></textarea>
+</div>
+<div id="parseFeedback" class="insurance-alert" style="display:none; margin-top: 10px;"></div>
+
+<div class="btn-group-input">
+<button class="primary-btn" onclick="processData()" id="analyzeBtn">Parse Quote</button>
+<button class="secondary-btn" onclick="clearData()" id="clearBtn">Clear</button>
+<button class="danger-btn exp-feature" onclick="clearAllData()" id="clearAllBtn" style="display: none;">Clear All</button>
+</div>
+
+<div class="checkbox-group no-bg" style="display: flex; gap: 12px; flex-direction: column;">
+<label style="color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+<input type="checkbox" id="autoCopyPaste" checked>
+<span id="lblAutoCopy">Auto-Parse & Copy on Paste</span>
+</label>
+<label class="exp-feature" style="color: var(--warning); font-weight: 600; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+<input type="checkbox" id="batchMode" onchange="toggleBatchMode()">
+<span id="lblBatchMode">Batch Quote Mode</span>
+</label>
+</div>
+
+<div class="filters exp-feature">
+<h3 id="step2Title">2. Rules & Filters</h3>
+<div class="filter-group exp-feature">
+<label id="destLabel">Destination Type:</label>
+<select id="destFilter" onchange="updateFilters()">
+<option value="standard" id="optStd">🏢 Standard Commercial</option>
+<option value="amazon">📦 Amazon FBA</option>
+<option value="walmart">🛒 Walmart DC</option>
+</select>
+</div>
+<div class="filter-group exp-feature">
+<label id="prodLabel">Special Commodity:</label>
+<select id="productFilter" onchange="updateFilters()">
+<option value="none" id="optNone">📦 General / FAK</option>
+<option value="tobacco" id="optTob">🚬 Tobacco / Cigarettes</option>
+<option value="alcohol" id="optAlc">🍷 Alcohol</option>
+<option value="vape" id="optVap">💨 Vape Products</option>
+<option value="firearms" id="optFire">🔫 Firearms / Ammunition</option>
+</select>
+</div>
+<div class="filter-group exp-feature" style="margin-bottom: 12px;">
+<label id="insLabel">Additional Insurance ($):</label>
+<input type="text" inputmode="decimal" id="insuranceInput" placeholder="0.00" oninput="handleInsuranceInput()">
+<div id="insuranceReminder" class="insurance-reminder">Reminder: calculate Insurance first in CABO (Priority1 calculator).</div>
+<div id="insuranceAlert" class="insurance-alert" style="display:none;"></div>
+</div>
+<div class="checkbox-group exp-feature" style="margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px;">
+<input type="checkbox" id="liftgateFilter" onchange="updateFilters()">
+<label for="liftgateFilter" id="liftLabel">Force Liftgate Rule Warning</label>
+</div>
+<div class="checkbox-group exp-feature">
+<input type="checkbox" id="cubicFilter" onchange="updateFilters()">
+<label for="cubicFilter" id="cubicLabel">Overlength / Cubic Capacity Rule Applies</label>
+</div>
+</div>
+</div>
+
+<div class="results-section">
+<div id="quoteSummaryContainer"></div>
+
+<div class="panel panel-elevated panel-results" id="resultsPanel" style="padding: 0; overflow: hidden;">
+<div class="toolbar-wrapper results-toolbar" style="padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--table-header); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+<div class="toolbar-group" style="display: flex; gap: 12px; align-items: center;">
+<h3 style="margin:0; border:none; padding:0;" id="resultCount">Results</h3>
+<select id="sortFilter" onchange="renderTable()" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.8rem; background: var(--card); color: var(--text); outline: none;">
+<option value="cheapest" id="optSortCheap">Sort: Cheapest</option>
+<option value="fastest" id="optSortFast">Sort: Fastest</option>
+</select>
+<label class="toolbar-inline-check">
+<input type="checkbox" id="separateRateTypes" onchange="renderTable()" checked>
+<span id="lblSeparateRates">Separate LTL/Volume</span>
+</label>
+</div>
+<div id="batchExportControls" class="batch-export-controls" style="display:none;">
+<label class="toolbar-inline-check">
+<input type="checkbox" id="batchShowTableView" onchange="renderTable()" checked>
+<span id="lblBatchShowTableView">Show table view</span>
+</label>
+<label class="toolbar-inline-check">
+<input type="checkbox" id="batchCheapestOnly" onchange="renderTable()">
+<span id="lblBatchCheapestOnly">Cheapest rate only</span>
+</label>
+<label class="toolbar-inline-check">
+<input type="checkbox" id="batchInlineLayout" onchange="updateBatchExportControls()">
+<span id="lblBatchInlineLayout">Inline spreadsheet layout</span>
+</label>
+<label class="toolbar-inline-check">
+<input type="checkbox" id="batchSpreadsheetRates" onchange="updateBatchExportControls()">
+<span id="lblBatchSpreadsheetRates">Include spreadsheet rates</span>
+</label>
+<div class="batch-rate-count-group">
+<span id="lblBatchInlineRateCount">Rates per quote</span>
+<select id="batchInlineRateCount" onchange="updateBatchExportControls()">
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+</select>
+</div>
+<div id="batchInlineHelper" class="batch-inline-helper"></div>
+</div>
+<div class="toolbar-export-options" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+<div class="toolbar-checkboxes" style="display: flex; gap: 12px; align-items: center;">
+<div id="internalColsFilters" style="display:none; gap: 12px; padding-left: 12px; border-left: 1px solid var(--border);">
+<label style="font-size: 0.85rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--primary);">
+<input type="checkbox" id="exportCarrierCost" onchange="renderTable()">
+<span id="lblCarrierCost">Carrier Cost</span>
+</label>
+<label style="font-size: 0.85rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--primary);">
+<input type="checkbox" id="exportMargin" onchange="renderTable()">
+<span id="lblMargin">Margin</span>
+</label>
+</div>
+</div>
+
+<div style="display:flex; align-items:center; gap:4px;" class="theme-dropdown-wrapper">
+<span id="lblEmailTheme" style="font-size:0.75rem; font-weight:bold; color:var(--primary);" class="hide-mobile">Email Theme:</span>
+<select id="emailTheme" class="email-theme-select" onchange="if(this.value === 'custom') { openBranding(); } else { renderTable(); }">
+<option value="default" id="thmDef">🎨 Default</option>
+<option value="monochrome" id="thmMono">⚫ Monochrome</option>
+<option value="vivid" id="thmViv">🌈 Vivid</option>
+<option value="feminine" id="thmFem">🌸 Feminine</option>
+<option value="navy" id="thmNav">🌌 Navy</option>
+<option value="corporate" id="thmCorp">🏢 Corporate</option>
+<option value="forest" id="thmFor">🌲 Forest</option>
+<option value="earth" id="thmEar">🟤 Earthy</option>
+<option value="midnight" id="thmMid">🌙 Midnight</option>
+<option value="slate" id="thmSla">📓 Slate</option>
+<option value="custom" id="thmCustom" style="font-weight: bold;">🖌️ Custom...</option>
+</select>
+</div>
+
+<div class="toolbar-export-btns" style="display: flex; gap: 8px;">
+<button class="secondary-btn" id="previewEmailBtn" onclick="openEmailPreview()" disabled>👁️ Preview</button>
+<button class="primary-btn" style="width: auto; padding: 6px 12px; font-size: 0.85rem;" id="copyBtn" onclick="copyForEmail()" disabled>📋 Copy for Email</button>
+</div>
+</div>
+</div>
+<div class="table-container">
+<table id="quotesTable">
+<thead>
+<tr id="tableHeadersRow">
+<th id="thCarrier">Carrier</th>
+<th id="thRate">Rate</th>
+<th id="thLiability">Liability</th>
+<th id="thTransit">Transit</th>
+<th id="thNotes">Notes & Rules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td colspan="8">
+<div class="empty-state" id="emptyText" style="color: var(--text-muted);">
+Paste quote data in the left panel.
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="disclaimer-footer" id="disclaimerText">
+⚠️ <strong>Disclaimer:</strong> This tool provides rule-based recommendations. Always verify final requirements with your client and check updated carrier tariffs.
+</div>
+</div>
+</div>
+</div>
+
+<div id="view-extras" class="tab-pane">
+<div class="grid" style="grid-template-columns: 1fr; max-width: 900px; margin: 0 auto;">
+<div class="panel">
+<h3 id="extHazTitle">☢️ Hazmat / NMFC Quick Search</h3>
+<p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;" id="extHazDesc">Quickly search for Hazmat classes, common NMFC numbers, or UN# without leaving the tool.</p>
+<input type="text" id="hazmatSearch" placeholder="Ex. 1203, UN1203, Explosives, Batteries..." onkeyup="searchHazmat()" style="width: 100%;">
+<div id="hazmatResults" style="max-height: 500px; overflow-y: auto; margin-top: 16px; padding: 0 4px;"></div>
+</div>
+</div>
+</div>
+
+<div id="view-dev" class="tab-pane">
+<div class="grid" style="grid-template-columns: 1fr; max-width: 1100px; margin: 0 auto;">
+<div class="panel panel-elevated">
+<div id="devLockedView">
+<h3 style="margin:0 0 12px 0;">Developer Mode</h3>
+<p class="dev-mode-intro">Unlock the local liftgate rules editor. This is a local working copy only and does not overwrite the default published rules unless you explicitly export and publish them later.</p>
+<div class="filter-group" style="max-width: 360px;">
+<label for="devPassword">Password</label>
+<input type="password" id="devPassword" placeholder="Enter developer password">
+</div>
+<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px;">
+<button class="primary-btn" style="flex: initial;" onclick="unlockDevMode()">Unlock Dev Mode</button>
+</div>
+<div id="devUnlockMsg" class="dev-inline-note"></div>
+</div>
+
+<div id="devUnlockedView" style="display:none;">
+<div class="dev-toolbar">
+<div>
+<h3 style="margin:0; border:none; padding:0;">Liftgate Rules Editor</h3>
+<div class="dev-inline-note">Editing local working copy of <code>liftgate.json</code>. Default rules remain available and unchanged until you export and publish them.</div>
+</div>
+<div class="dev-toolbar-actions">
+<button class="secondary-btn" onclick="previewWorkingLiftgateRules()">Preview Working Copy</button>
+<button class="secondary-btn" onclick="useDefaultLiftgateRules()">Use Default Rules</button>
+<button class="secondary-btn" onclick="resetLiftgateWorkingCopy()">Reset Working Copy</button>
+<button class="primary-btn" onclick="exportLiftgateRulesJson()">Export JSON</button>
+</div>
+</div>
+
+<div class="dev-status-strip">
+<span class="dev-status-badge" id="devSourceBadge">Using default rules</span>
+<span class="dev-status-badge" id="devDirtyBadge">No local edits</span>
+</div>
+
+<div class="dev-editor-actions">
+<input type="text" id="devCarrierSearch" placeholder="Search carrier..." oninput="renderLiftgateEditor()">
+<button class="secondary-btn" onclick="addLiftgateCarrier()">Add Carrier</button>
+</div>
+
+<div id="liftgateEditorList" class="dev-editor-list"></div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<div id="copyToast" class="toast-notification">
+<span>✅</span> <span id="toastMsg">Copied to clipboard!</span>
+</div>
+
+<div id="updateToast" class="toast-notification" style="background-color: var(--primary); display: none; flex-direction: column; align-items: flex-start; z-index: 3000;">
+<div style="font-weight: bold; margin-bottom: 4px;" id="updateToastMsg">New version available!</div>
+<button onclick="location.reload(true)" style="background: white; color: var(--primary); border: none; padding: 4px 8px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem;" id="updateToastBtn">Click to refresh</button>
+</div>
+
+<script src="./script.js"></script>
+<script src="./feedback-config.js"></script>
+<script src="./feedback.js"></script>
+</body>
+</html>

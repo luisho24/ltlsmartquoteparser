@@ -1,0 +1,31 @@
+name: ltl-feedback
+services:
+  feedback:
+    build: .
+    restart: unless-stopped
+    # Linux VPS + host Caddy. The application binds only 127.0.0.1:8787.
+    network_mode: host
+    env_file: .env
+    environment:
+      FEEDBACK_DB: /data/feedback.sqlite3
+      TRUSTED_PROXIES: 127.0.0.1/32
+    volumes:
+      - ./data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 192m
+    cpus: 0.50
+    logging:
+      driver: json-file
+      options:
+        max-size: 2m
+        max-file: '2'
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

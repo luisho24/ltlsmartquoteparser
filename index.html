@@ -2,6 +2,8 @@
 
 <html lang="en">
 <head>
+<script src="./experience.js"></script>
+
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Smart LTL · Quote workspace</title>
@@ -9,7 +11,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="./parser-core.js"></script>
 <link href="./styles.css" rel="stylesheet"/>
-<meta content="Review Priority1 carrier rates and create clear, professional LTL quote emails." name="description"/></head>
+<meta content="Review Priority1 carrier rates and create clear, professional LTL quote emails." name="description"/><link rel="stylesheet" href="./shared-ui.css">
+</head>
 <body onload="initApp()"><a class="skip-link" href="#inputData">Skip to quote input</a><header class="app-header"><div class="app-header-inner"><a aria-label="Smart LTL home" class="wordmark" href="./index.html"><svg aria-hidden="true" class="brand-symbol" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" viewbox="0 0 24 24"><path d="M5 4h5v11h9v5H5Z"></path><path d="M14 4h5v6h-5Z"></path></svg><span>Smart LTL<span class="wordmark-sub">QUOTE DESK</span></span></a><div class="header-navigation"><nav aria-label="Workspace navigation" class="tabs-nav">
 <button class="tab-btn active" id="btn-tab-analyzer" onclick="switchTab('analyzer')">Parser</button>
 <button class="tab-btn" id="btn-tab-extras" onclick="switchTab('extras')">Extras</button>
@@ -367,5 +370,7 @@
 <button id="updateToastBtn" onclick="location.reload(true)">Click to refresh</button>
 </div>
 <script src="./script.js"></script>
-<script src="./workspace-ui.js"></script></body>
+<script src="./workspace-ui.js"></script><script src="./feedback-config.js"></script>
+<script src="./feedback.js"></script>
+</body>
 </html>
