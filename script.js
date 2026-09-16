@@ -313,7 +313,7 @@ const dict = {
         lblPasteAnywhere: "Activar Quick Capture Mode (pegar en cualquier parte)",
         liftLabel: "Forzar advertencia de Regla de Liftgate", cubicLabel: "Exceso de Longitud / Capacidad Cúbica (Overlength)",
         lblFrom: "Origen (From)", lblTo: "Destino (To)", lblItems: "Items / Detalles", lblAcc: "Servicios Adicionales (Accessorials)",
-        thCarrier: "Carrier", thRate: "Tarifa", thLiability: "Responsabilidad", thTransit: "Tránsito", thNotes: "Notas & Reglas",
+        thCarrier: "Carrier", thRate: "Tarifa", thLiability: "Responsabilidad", thTransit: "Tránsito", thEmailTransit: "Tiempo de tránsito estimado", thNotes: "Notas & Reglas",
         emptyText: "Pega los datos en el panel izquierdo y presiona Analizar Cotización.", resCount: "Resultados ({0} viables)",
         statOk: "Compatible", statWarn: "Con Restricciones", statBanned: "Prohibido:", statRestr: "Restringido:",
         day: "Día", days: "Días", rateLTL: "LTL", rateVol: "Volumen",
@@ -359,7 +359,7 @@ const dict = {
         lblPasteAnywhere: "Enable Quick Capture Mode (Paste Anywhere)",
         liftLabel: "Force Liftgate Rule Warning", cubicLabel: "Overlength / Cubic Capacity Rule Applies",
         lblFrom: "Origin (From)", lblTo: "Destination (To)", lblItems: "Items / Pallets", lblAcc: "Accessorials",
-        thCarrier: "Carrier", thRate: "Rate", thLiability: "Liability", thTransit: "Transit", thNotes: "Notes & Rules",
+        thCarrier: "Carrier", thRate: "Rate", thLiability: "Liability", thTransit: "Transit", thEmailTransit: "Estimated Transit time", thNotes: "Notes & Rules",
         emptyText: "Paste quote data in the left panel and click Parse Quote Data.", resCount: "Results ({0} viable)",
         statOk: "Compatible", statWarn: "With Restrictions", statBanned: "Banned:", statRestr: "Restricted:",
         day: "Day", days: "Days", rateLTL: "LTL", rateVol: "Volume",
@@ -1482,7 +1482,7 @@ function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
 
         let thHTML = `<th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; width: 35%; color: ${th.thText};">${t.thCarrier}</th><th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; width: 25%; color: ${th.thText};">${t.thRate}</th>`;
         if (hasInternalCols && (exportCarrierCost || exportMargin)) thHTML += `<th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">${exportCarrierCost ? t.lblCarrierCost : ''} ${exportCarrierCost && exportMargin ? '/' : ''} ${exportMargin ? t.lblMargin : ''}</th>`;
-        thHTML += `<th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; width: 20%; color: ${th.thText};">${t.thLiability}</th><th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; width: 20%; color: ${th.thText};">${t.thTransit}</th>`;
+        thHTML += `<th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; width: 20%; color: ${th.thText};">${t.thLiability}</th><th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; width: 20%; color: ${th.thText};">${isPdf ? t.thTransit : t.thEmailTransit}</th>`;
         if (hasInternalCols) thHTML += `<th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">${t.lblExpDate}</th>`;
 
         const renderTableBlock = (ratesToRender, title) => {
