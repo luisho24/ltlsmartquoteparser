@@ -1,456 +1,371 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart LTL Quote Analyzer</title>
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="./parser-core.js"></script>
-    <link rel="stylesheet" href="./styles.css">
-</head>
-<body onload="initApp()">
-
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Smart LTL · Quote workspace</title>
+<link href="./favicon.svg" rel="icon" type="image/svg+xml"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="./parser-core.js"></script>
+<link href="./styles.css" rel="stylesheet"/>
+<meta content="Review Priority1 carrier rates and create clear, professional LTL quote emails." name="description"/></head>
+<body onload="initApp()"><a class="skip-link" href="#inputData">Skip to quote input</a><header class="app-header"><div class="app-header-inner"><a aria-label="Smart LTL home" class="wordmark" href="./index.html"><svg aria-hidden="true" class="brand-symbol" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" viewbox="0 0 24 24"><path d="M5 4h5v11h9v5H5Z"></path><path d="M14 4h5v6h-5Z"></path></svg><span>Smart LTL<span class="wordmark-sub">QUOTE DESK</span></span></a><div class="header-navigation"><nav aria-label="Workspace navigation" class="tabs-nav">
+<button class="tab-btn active" id="btn-tab-analyzer" onclick="switchTab('analyzer')">Parser</button>
+<button class="tab-btn" id="btn-tab-extras" onclick="switchTab('extras')">Extras</button>
+<button class="tab-btn" id="btn-tab-dev" onclick="switchTab('dev')" style="display:none;">Dev</button>
+</nav></div><div class="header-utilities"><button class="text-button feedback-button" data-ui-text="feedback" onclick="openBugReport()">Feedback</button><div class="language-slot"><div aria-label="Language" class="toggle-group">
+<button class="toggle-btn" id="btn-es" onclick="setLang('es')">ES</button>
+<button class="toggle-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+</div></div><button aria-label="Open settings" class="icon-button" onclick="openSettings()" title="Settings"><svg aria-hidden="true" class="icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" viewbox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"></path><path d="m9 3-1 3-3 1-2 3 2 2-1 3 3 2 1 3h4l1-3 3-1 2-3-2-2 1-3-3-2-1-3Z"></path></svg></button></div></div></header>
 <!-- Settings Modal -->
-<div id="settingsModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content panel" style="max-height: 90vh; overflow-y: auto;">
-        <h3 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
-            <span>⚙️ Settings</span>
-            <button onclick="closeSettings()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text);">✖</button>
-        </h3>
-
-        <div class="checkbox-group" style="margin-bottom: 16px; border: 1px solid var(--primary); background: var(--toggle-bg);">
-            <input type="checkbox" id="expToggle" onchange="toggleExperimental(this.checked)">
-            <label for="expToggle" style="font-weight: bold; color: var(--primary);">Enable Experimental Features</label>
-        </div>
-        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0; margin-bottom: 16px; line-height: 1.3;">
-            Unlocks Batch Mode, PDF/CSV Exports, Destination Types, Commodities, Additional Insurance, and strict Rule Checks.
-        </p>
-
-        <div class="checkbox-group" style="margin-bottom: 16px;">
-            <input type="checkbox" id="pasteAnywhereToggle" onchange="togglePasteAnywhere(this.checked)">
-            <label for="pasteAnywhereToggle" id="lblPasteAnywhere">Enable Paste Anywhere Mode</label>
-        </div>
-
-        <div class="checkbox-group" style="margin-bottom: 16px;">
-            <input type="checkbox" id="roundTripClipboardToggle" onchange="toggleParserSafeCopy(this.checked)">
-            <label for="roundTripClipboardToggle">Include parser-safe plain text in copied export</label>
-        </div>
-
-        <button class="primary-btn" style="width: 100%; margin-top: 16px;" onclick="closeSettings()">Done</button>
-    </div>
+<div aria-label="Settings" aria-modal="true" class="modal-overlay" id="settingsModal" role="dialog" style="display:none;">
+<div class="modal-content panel">
+<h3>
+<span>Settings</span>
+<button aria-label="Close settings" class="icon-button dialog-close" onclick="closeSettings()">×</button>
+</h3><section class="settings-appearance"><h4 data-ui-text="appearance">Interface appearance</h4><div class="appearance-row"><label data-ui-text="colorMode">Color mode</label><div class="mode-slot"><div aria-label="Color mode" class="toggle-group" title="App Interface Theme">
+<button class="toggle-btn active" id="btn-light" onclick="setTheme('light')">Light</button>
+<button class="toggle-btn" id="btn-dark" onclick="setTheme('dark')">Dark</button>
+</div></div></div><div class="appearance-row"><label data-ui-text="accent" for="appThemeSelect">Accent</label><div class="accent-slot"><select aria-label="Interface accent" class="theme-select" id="appThemeSelect" onchange="setAppTheme(this.value)">
+<option id="appThmDef" value="default">Default Theme</option>
+<option id="appThmMono" value="monochrome">Monochrome</option>
+<option id="appThmViv" value="vivid">Vivid</option>
+<option id="appThmFem" value="feminine">Feminine</option>
+<option id="appThmNav" value="navy">Navy</option>
+<option id="appThmCorp" value="corporate">Corporate</option>
+<option id="appThmFor" value="forest">Forest</option>
+<option id="appThmEar" value="earth">Earthy</option>
+<option id="appThmMid" value="midnight">Midnight</option>
+<option id="appThmSla" value="slate">Slate</option>
+</select></div></div></section>
+<div class="checkbox-group">
+<input id="expToggle" onchange="toggleExperimental(this.checked)" type="checkbox"/>
+<label for="expToggle">Enable Experimental Features</label>
 </div>
-
+<p>
+            Unlocks batch quoting, destination and commodity filters, additional insurance, and shipment rule checks.
+        </p>
+<div class="checkbox-group">
+<input id="pasteAnywhereToggle" onchange="togglePasteAnywhere(this.checked)" type="checkbox"/>
+<label for="pasteAnywhereToggle" id="lblPasteAnywhere">Enable Paste Anywhere Mode</label>
+</div>
+<div class="checkbox-group">
+<input id="roundTripClipboardToggle" onchange="toggleParserSafeCopy(this.checked)" type="checkbox"/>
+<label for="roundTripClipboardToggle">Include parser-safe plain text in copied export</label>
+</div>
+<button class="primary-btn" onclick="closeSettings()">Done</button>
+</div>
+</div>
 <!-- Branding Modal -->
-<div id="brandingModal" class="modal-overlay" style="display: none; z-index: 2550;">
-    <div class="modal-content panel" style="max-height: 90vh; overflow-y: auto;">
-        <h3 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
-            <span>🎨 Email Custom Branding</span>
-            <button onclick="closeBranding()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text);">✖</button>
-        </h3>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0; margin-bottom: 12px; line-height: 1.3;">
+<div aria-label="Email appearance" aria-modal="true" class="modal-overlay" id="brandingModal" role="dialog" style="display:none;">
+<div class="modal-content panel">
+<h3>
+<span>Email appearance</span>
+<button aria-label="Close email appearance" class="icon-button dialog-close" onclick="closeBranding()">×</button>
+</h3>
+<p>
             Edit colors below to automatically trigger the Live Preview.
         </p>
-
-        <div class="color-grid">
-            <div class="color-item">
-                <label>Primary Color</label>
-                <input type="color" id="cPrimary" value="#2563eb" oninput="handleColorChange()">
-            </div>
-            <div class="color-item">
-                <label>Table Header</label>
-                <input type="color" id="cHeader" value="#f1f5f9" oninput="handleColorChange()">
-            </div>
-            <div class="color-item">
-                <label>Background</label>
-                <input type="color" id="cBg" value="#ffffff" oninput="handleColorChange()">
-            </div>
-            <div class="color-item">
-                <label>Text Color</label>
-                <input type="color" id="cText" value="#333333" oninput="handleColorChange()">
-            </div>
-            <div class="color-item">
-                <label>Border</label>
-                <input type="color" id="cBorder" value="#cbd5e1" oninput="handleColorChange()">
-            </div>
-            <div class="color-item">
-                <label>Accent (Headers)</label>
-                <input type="color" id="cAcc" value="#166534" oninput="handleColorChange()">
-            </div>
-        </div>
-
-        <button class="primary-btn" style="width: 100%; margin-top: 16px;" onclick="closeBranding()">Done</button>
-    </div>
+<div class="color-grid">
+<div class="color-item">
+<label>Primary Color</label>
+<input id="cPrimary" oninput="handleColorChange()" type="color" value="#2563eb"/>
 </div>
-
+<div class="color-item">
+<label>Table Header</label>
+<input id="cHeader" oninput="handleColorChange()" type="color" value="#f1f5f9"/>
+</div>
+<div class="color-item">
+<label>Background</label>
+<input id="cBg" oninput="handleColorChange()" type="color" value="#ffffff"/>
+</div>
+<div class="color-item">
+<label>Text Color</label>
+<input id="cText" oninput="handleColorChange()" type="color" value="#333333"/>
+</div>
+<div class="color-item">
+<label>Border</label>
+<input id="cBorder" oninput="handleColorChange()" type="color" value="#cbd5e1"/>
+</div>
+<div class="color-item">
+<label>Accent (Headers)</label>
+<input id="cAcc" oninput="handleColorChange()" type="color" value="#166534"/>
+</div>
+</div>
+<button class="primary-btn" onclick="closeBranding()">Done</button>
+</div>
+</div>
 <!-- Email Preview Modal -->
-<div id="emailPreviewModal" class="modal-overlay" style="display: none; z-index: 2500;">
-    <div class="modal-content panel preview-panel" style="width: 95%; max-width: 850px; height: 90vh; display: flex; flex-direction: column;">
-        <h3 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
-            <span>👁️ Live Email Preview</span>
-            <button onclick="closeEmailPreview()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text);">✖</button>
-        </h3>
-        <div id="previewContainer" style="flex-grow: 1; overflow-y: auto; background: #e2e8f0; padding: 20px; border-radius: 6px; display: flex; justify-content: center;"></div>
-        <div style="flex-shrink: 0; padding-top: 12px; display: flex; gap: 12px;">
-            <button class="secondary-btn" style="flex:1;" onclick="closeEmailPreview()">Close Preview</button>
-            <button class="primary-btn" style="flex:1;" onclick="copyForEmailFromPreview()">📋 Copy This Design</button>
-        </div>
-    </div>
+<div aria-label="Email preview" aria-modal="true" class="modal-overlay" id="emailPreviewModal" role="dialog" style="display:none;">
+<div class="modal-content panel preview-panel">
+<h3>
+<span>Email preview</span>
+<button aria-label="Close email preview" class="icon-button dialog-close" onclick="closeEmailPreview()">×</button>
+</h3>
+<div id="previewContainer"></div>
+<div>
+<button class="secondary-btn" onclick="closeEmailPreview()">Close Preview</button>
+<button class="primary-btn" onclick="copyForEmailFromPreview()">Copy for email</button>
 </div>
-
+</div>
+</div>
 <!-- Bug Report Modal -->
-<div id="bugReportModal" class="modal-overlay" style="display: none; z-index: 2600;">
-    <div class="modal-content panel" style="width: 95%; max-width: 760px; max-height: 90vh; overflow-y: auto;">
-        <h3 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
-            <span>🐞 Report Bug</span>
-            <button onclick="closeBugReport()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text);">✖</button>
-        </h3>
-        <p class="bug-report-intro">Open the external feedback form and paste a ready-to-use report with the current app context.</p>
-
-        <div class="filter-group">
-            <label for="bugType">Type</label>
-            <select id="bugType" onchange="updateBugReportPreview()">
-                <option value="Bug Report">Bug Report</option>
-                <option value="Feature Suggestion">Feature Suggestion</option>
-            </select>
-        </div>
-
-        <div class="filter-group">
-            <label for="bugTitle">Title</label>
-            <input type="text" id="bugTitle" placeholder="Example: Transit Days show as N/A for Priority1 export" oninput="updateBugReportPreview()">
-        </div>
-
-        <div class="filter-group">
-            <label for="bugSummary">What happened?</label>
-            <textarea id="bugSummary" class="bug-textarea" placeholder="Describe the bug, what you expected, and how to reproduce it." oninput="updateBugReportPreview()"></textarea>
-        </div>
-
-        <div class="filter-group">
-            <label for="bugSteps">Steps to reproduce</label>
-            <textarea id="bugSteps" class="bug-textarea" placeholder="1. Paste quote...&#10;2. Click Parse Quote...&#10;3. Observe issue..." oninput="updateBugReportPreview()"></textarea>
-        </div>
-
-        <div class="filter-group">
-            <label for="bugContextPreview">Context preview</label>
-            <textarea id="bugContextPreview" class="bug-textarea bug-context-preview" readonly></textarea>
-        </div>
-
-        <div class="bug-report-actions">
-            <button class="secondary-btn" onclick="copyBugReport()">📋 Copy Report</button>
-            <button class="primary-btn" onclick="openBugForm()">↗ Open Feedback Form</button>
-        </div>
-    </div>
+<div aria-label="Feedback" aria-modal="true" class="modal-overlay" id="bugReportModal" role="dialog" style="display:none;">
+<div class="modal-content panel feedback-panel">
+<h3>
+<span>Feedback</span>
+<button aria-label="Close feedback" class="icon-button dialog-close" onclick="closeBugReport()">×</button>
+</h3>
+<p class="bug-report-intro">Open the external feedback form and paste a ready-to-use report with the current app context.</p>
+<div class="filter-group">
+<label for="bugType">Type</label>
+<select id="bugType" onchange="updateBugReportPreview()">
+<option value="Bug Report">Bug Report</option>
+<option value="Feature Suggestion">Feature Suggestion</option>
+</select>
 </div>
+<div class="filter-group">
+<label for="bugTitle">Title</label>
+<input id="bugTitle" oninput="updateBugReportPreview()" placeholder="Example: Transit Days show as N/A for Priority1 export" type="text"/>
+</div>
+<div class="filter-group">
+<label for="bugSummary">What happened?</label>
+<textarea class="bug-textarea" id="bugSummary" oninput="updateBugReportPreview()" placeholder="Describe the bug, what you expected, and how to reproduce it."></textarea>
+</div>
+<div class="filter-group">
+<label for="bugSteps">Steps to reproduce</label>
+<textarea class="bug-textarea" id="bugSteps" oninput="updateBugReportPreview()" placeholder="1. Paste quote...
+2. Click Parse Quote...
+3. Observe issue..."></textarea>
+</div>
+<div class="filter-group">
+<label for="bugContextPreview">Context preview</label>
+<textarea class="bug-textarea bug-context-preview" id="bugContextPreview" readonly=""></textarea>
+</div>
+<div class="bug-report-actions">
+<button class="secondary-btn" onclick="copyBugReport()">Copy Report</button>
+<button class="primary-btn" onclick="openBugForm()">Open Feedback Form</button>
+</div>
+</div>
+</div>
+<div class="container workspace-container"><div class="workspace-intro"><div><div class="workspace-breadcrumb"><span data-ui-text="workspace">WORKSPACE</span><span>/</span><span data-ui-text="ltlQuotes">LTL QUOTES</span></div><h1 id="mainTitle">Quote workspace</h1><p data-ui-text="intro">Compare your carrier options. Send a clear quote.</p></div><button class="secondary-btn appearance-button" onclick="openBranding()"><svg aria-hidden="true" class="icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" viewbox="0 0 24 24"><path d="M4 7h8m4 0h4M4 17h3m4 0h9"></path><circle cx="14" cy="7" r="2"></circle><circle cx="9" cy="17" r="2"></circle></svg><span data-ui-text="emailAppearance">Email appearance</span></button></div>
 
-<div class="container">
-    <div class="hero-shell">
-        <div class="header-container">
-            <div class="hero-copy">
-                <div class="hero-kicker">Priority1 Workflow Tool</div>
-                <div class="hero-title-row">
-                    <button class="hero-settings-btn" onclick="openSettings()" title="Settings">⚙️</button>
-                    <div>
-                        <h1 id="mainTitle">📊 Smart LTL Quote Parser</h1>
-                    </div>
-                </div>
-            </div>
-            <div class="controls-group hero-controls">
-                <div class="control-card control-card-action">
-                    <span class="control-card-label">Support</span>
-                    <button class="hero-action-btn" onclick="openBugReport()">🐞 Report Bug</button>
-                </div>
-                <div class="control-card control-card-action">
-                    <span class="control-card-label">Branding</span>
-                    <button class="hero-action-btn" onclick="openBranding()">🎨 Custom Branding</button>
-                </div>
-                <div class="control-card">
-                    <span class="control-card-label">Mode</span>
-                    <div class="toggle-group" title="App Interface Theme">
-                        <button class="toggle-btn active" onclick="setTheme('light')" id="btn-light">☀️</button>
-                        <button class="toggle-btn" onclick="setTheme('dark')" id="btn-dark">🌙</button>
-                    </div>
-                </div>
-                <div class="control-card">
-                    <span class="control-card-label">Language</span>
-                    <div class="toggle-group">
-                        <button class="toggle-btn" onclick="setLang('es')" id="btn-es">ES</button>
-                        <button class="toggle-btn active" onclick="setLang('en')" id="btn-en">EN</button>
-                    </div>
-                </div>
-                <div class="control-card control-card-select">
-                    <span class="control-card-label">Theme</span>
-                    <select id="appThemeSelect" class="theme-select" onchange="setAppTheme(this.value)">
-                        <option value="default" id="appThmDef">🎨 Default Theme</option>
-                        <option value="monochrome" id="appThmMono">⚫ Monochrome</option>
-                        <option value="vivid" id="appThmViv">🌈 Vivid</option>
-                        <option value="feminine" id="appThmFem">🌸 Feminine</option>
-                        <option value="navy" id="appThmNav">🌌 Navy</option>
-                        <option value="corporate" id="appThmCorp">🏢 Corporate</option>
-                        <option value="forest" id="appThmFor">🌲 Forest</option>
-                        <option value="earth" id="appThmEar">🟤 Earthy</option>
-                        <option value="midnight" id="appThmMid">🌙 Midnight</option>
-                        <option value="slate" id="appThmSla">📓 Slate</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="tabs-nav">
-        <button class="tab-btn active" id="btn-tab-analyzer" onclick="switchTab('analyzer')">Parser</button>
-        <button class="tab-btn" id="btn-tab-extras" onclick="switchTab('extras')">Extras</button>
-        <button class="tab-btn" id="btn-tab-dev" onclick="switchTab('dev')" style="display:none;">Dev</button>
-    </div>
-
-    <div id="view-analyzer" class="tab-pane active">
-        <div class="grid">
-            <div class="panel input-section panel-elevated">
-                <h3 id="step1Title">1. Quote Data Input</h3>
-                <div id="pasteAnywhereBanner" class="paste-anywhere-banner" style="display:none;">
-                    <div class="paste-anywhere-banner-kicker">Quick Capture Mode</div>
-                    <div class="paste-anywhere-banner-title">Paste Anywhere Mode is active</div>
-                    <div class="paste-anywhere-banner-text">Press <strong>Ctrl + V</strong> anywhere on the page to send a quote directly into the parser.</div>
-                    <div class="paste-anywhere-banner-hint">The quote input field is hidden while this mode is enabled.</div>
-                </div>
-                <div id="inputDataWrapper">
-                    <textarea id="inputData" placeholder="Paste your full quote text here (Quote Id, From, To, Items, Rates)..."></textarea>
-                </div>
-                <div id="parseFeedback" class="insurance-alert" style="display:none; margin-top: 10px;"></div>
-
-                <div class="btn-group-input">
-                    <button class="primary-btn" onclick="processData()" id="analyzeBtn">Parse Quote</button>
-                    <button class="secondary-btn" onclick="clearData()" id="clearBtn">Clear</button>
-                    <button class="danger-btn exp-feature" onclick="clearAllData()" id="clearAllBtn" style="display: none;">Clear All</button>
-                </div>
-
-                <div class="checkbox-group no-bg" style="display: flex; gap: 12px; flex-direction: column;">
-                    <label style="color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 4px; cursor: pointer;">
-                        <input type="checkbox" id="autoCopyPaste" checked>
-                        <span id="lblAutoCopy">Auto-Parse & Copy on Paste</span>
-                    </label>
-                    <label class="exp-feature" style="color: var(--warning); font-weight: 600; display: flex; align-items: center; gap: 4px; cursor: pointer;">
-                        <input type="checkbox" id="batchMode" onchange="toggleBatchMode()">
-                        <span id="lblBatchMode">Batch Quote Mode</span>
-                    </label>
-                </div>
-
-                <div class="filters exp-feature">
-                    <h3 id="step2Title">2. Rules & Filters</h3>
-                    <div class="filter-group exp-feature">
-                        <label id="destLabel">Destination Type:</label>
-                        <select id="destFilter" onchange="updateFilters()">
-                            <option value="standard" id="optStd">🏢 Standard Commercial</option>
-                            <option value="amazon">📦 Amazon FBA</option>
-                            <option value="walmart">🛒 Walmart DC</option>
-                        </select>
-                    </div>
-                    <div class="filter-group exp-feature">
-                        <label id="prodLabel">Special Commodity:</label>
-                        <select id="productFilter" onchange="updateFilters()">
-                            <option value="none" id="optNone">📦 General / FAK</option>
-                            <option value="tobacco" id="optTob">🚬 Tobacco / Cigarettes</option>
-                            <option value="alcohol" id="optAlc">🍷 Alcohol</option>
-                            <option value="vape" id="optVap">💨 Vape Products</option>
-                            <option value="firearms" id="optFire">🔫 Firearms / Ammunition</option>
-                        </select>
-                    </div>
-                    <div class="filter-group exp-feature" style="margin-bottom: 12px;">
-                        <label id="insLabel">Additional Insurance ($):</label>
-                        <input type="text" inputmode="decimal" id="insuranceInput" placeholder="0.00" oninput="handleInsuranceInput()">
-                        <div id="insuranceReminder" class="insurance-reminder">Reminder: calculate Insurance first in CABO (Priority1 calculator).</div>
-                        <div id="insuranceAlert" class="insurance-alert" style="display:none;"></div>
-                    </div>
-                    <div class="checkbox-group exp-feature" style="margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px;">
-                        <input type="checkbox" id="liftgateFilter" onchange="updateFilters()">
-                        <label for="liftgateFilter" id="liftLabel">Force Liftgate Rule Warning</label>
-                    </div>
-                    <div class="checkbox-group exp-feature">
-                        <input type="checkbox" id="cubicFilter" onchange="updateFilters()">
-                        <label for="cubicFilter" id="cubicLabel">Overlength / Cubic Capacity Rule Applies</label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="results-section">
-                <div id="quoteSummaryContainer"></div>
-
-                <div class="panel panel-elevated panel-results" id="resultsPanel" style="padding: 0; overflow: hidden;">
-                    <div class="toolbar-wrapper results-toolbar" style="padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--table-header); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                        <div class="toolbar-group" style="display: flex; gap: 12px; align-items: center;">
-                            <h3 style="margin:0; border:none; padding:0;" id="resultCount">Results</h3>
-                            <select id="sortFilter" onchange="renderTable()" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.8rem; background: var(--card); color: var(--text); outline: none;">
-                                <option value="cheapest" id="optSortCheap">Sort: Cheapest</option>
-                                <option value="fastest" id="optSortFast">Sort: Fastest</option>
-                            </select>
-                            <label class="toolbar-inline-check">
-                                <input type="checkbox" id="separateRateTypes" onchange="renderTable()" checked>
-                                <span id="lblSeparateRates">Separate LTL/Volume</span>
-                            </label>
-                        </div>
-                        <div id="batchExportControls" class="batch-export-controls" style="display:none;">
-                            <label class="toolbar-inline-check">
-                                <input type="checkbox" id="batchShowTableView" onchange="renderTable()" checked>
-                                <span id="lblBatchShowTableView">Show table view</span>
-                            </label>
-                            <label class="toolbar-inline-check">
-                                <input type="checkbox" id="batchCheapestOnly" onchange="renderTable()">
-                                <span id="lblBatchCheapestOnly">Cheapest rate only</span>
-                            </label>
-                            <label class="toolbar-inline-check">
-                                <input type="checkbox" id="batchInlineLayout" onchange="updateBatchExportControls()">
-                                <span id="lblBatchInlineLayout">Inline spreadsheet layout</span>
-                            </label>
-                            <label class="toolbar-inline-check">
-                                <input type="checkbox" id="batchSpreadsheetRates" onchange="updateBatchExportControls()">
-                                <span id="lblBatchSpreadsheetRates">Include spreadsheet rates</span>
-                            </label>
-                            <div class="batch-rate-count-group">
-                                <span id="lblBatchInlineRateCount">Rates per quote</span>
-                                <select id="batchInlineRateCount" onchange="updateBatchExportControls()">
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
-                                </select>
-                            </div>
-                            <div id="batchInlineHelper" class="batch-inline-helper"></div>
-                        </div>
-                        <div class="toolbar-export-options" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                            <div class="toolbar-checkboxes" style="display: flex; gap: 12px; align-items: center;">
-                                <div id="internalColsFilters" style="display:none; gap: 12px; padding-left: 12px; border-left: 1px solid var(--border);">
-                                    <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--primary);">
-                                        <input type="checkbox" id="exportCarrierCost" onchange="renderTable()">
-                                        <span id="lblCarrierCost">Carrier Cost</span>
-                                    </label>
-                                    <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--primary);">
-                                        <input type="checkbox" id="exportMargin" onchange="renderTable()">
-                                        <span id="lblMargin">Margin</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div style="display:flex; align-items:center; gap:4px;" class="theme-dropdown-wrapper">
-                                <span id="lblEmailTheme" style="font-size:0.75rem; font-weight:bold; color:var(--primary);" class="hide-mobile">Email Theme:</span>
-                                <select id="emailTheme" class="email-theme-select" onchange="if(this.value === 'custom') { openBranding(); } else { renderTable(); }">
-                                    <option value="default" id="thmDef">🎨 Default</option>
-                                    <option value="monochrome" id="thmMono">⚫ Monochrome</option>
-                                    <option value="vivid" id="thmViv">🌈 Vivid</option>
-                                    <option value="feminine" id="thmFem">🌸 Feminine</option>
-                                    <option value="navy" id="thmNav">🌌 Navy</option>
-                                    <option value="corporate" id="thmCorp">🏢 Corporate</option>
-                                    <option value="forest" id="thmFor">🌲 Forest</option>
-                                    <option value="earth" id="thmEar">🟤 Earthy</option>
-                                    <option value="midnight" id="thmMid">🌙 Midnight</option>
-                                    <option value="slate" id="thmSla">📓 Slate</option>
-                                    <option value="custom" id="thmCustom" style="font-weight: bold;">🖌️ Custom...</option>
-                                </select>
-                            </div>
-
-                            <div class="toolbar-export-btns" style="display: flex; gap: 8px;">
-                                <button class="secondary-btn" id="previewEmailBtn" onclick="openEmailPreview()" disabled>👁️ Preview</button>
-                                <button class="primary-btn" style="width: auto; padding: 6px 12px; font-size: 0.85rem;" id="copyBtn" onclick="copyForEmail()" disabled>📋 Copy for Email</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="table-container">
-                        <table id="quotesTable">
-                            <thead>
-                                <tr id="tableHeadersRow">
-                                    <th id="thCarrier">Carrier</th>
-                                    <th id="thRate">Rate</th>
-                                    <th id="thLiability">Liability</th>
-                                    <th id="thTransit">Transit</th>
-                                    <th id="thNotes">Notes & Rules</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td colspan="8">
-                                        <div class="empty-state" id="emptyText" style="color: var(--text-muted);">
+<div class="tab-pane active" id="view-analyzer">
+<div class="grid">
+<div aria-labelledby="step1Title" class="panel input-section panel-elevated">
+<div class="panel-eyebrow" data-ui-text="sourceEyebrow">QUOTE SOURCE</div><h3 id="step1Title">1. Quote Data Input</h3><p class="source-description" data-ui-text="sourceDescription">Paste the complete quote from Priority1.</p>
+<div class="paste-anywhere-banner" id="pasteAnywhereBanner" style="display:none;">
+<div class="paste-anywhere-banner-kicker">Quick Capture Mode</div>
+<div class="paste-anywhere-banner-title">Paste Anywhere Mode is active</div>
+<div class="paste-anywhere-banner-text">Press <strong>Ctrl + V</strong> anywhere on the page to send a quote directly into the parser.</div>
+<div class="paste-anywhere-banner-hint">The quote input field is hidden while this mode is enabled.</div>
+</div>
+<div id="inputDataWrapper">
+<textarea aria-label="Priority1 quote text" id="inputData" placeholder="Paste your full quote text here (Quote Id, From, To, Items, Rates)..." spellcheck="false"></textarea>
+</div><div class="input-caption"><span data-ui-text="inputCaption">Quote details + carrier table</span><kbd title="Analyze quote">Ctrl ↵</kbd></div>
+<div aria-live="polite" class="insurance-alert" id="parseFeedback" role="status" style="display:none;"></div>
+<div class="btn-group-input">
+<button class="primary-btn" id="analyzeBtn" onclick="processData()">Parse Quote</button>
+<button class="secondary-btn" id="clearBtn" onclick="clearData()">Clear</button>
+<button class="danger-btn exp-feature" id="clearAllBtn" onclick="clearAllData()" style="display:none;">Clear All</button>
+</div><div aria-live="polite" class="source-status" id="sourceStatus"></div>
+<div class="checkbox-group no-bg">
+<label>
+<input checked="" id="autoCopyPaste" type="checkbox"/>
+<span id="lblAutoCopy">Auto-Parse &amp; Copy on Paste</span>
+</label>
+<label class="exp-feature">
+<input id="batchMode" onchange="toggleBatchMode()" type="checkbox"/>
+<span id="lblBatchMode">Batch Quote Mode</span>
+</label>
+</div>
+<div class="filters exp-feature">
+<h3 id="step2Title">2. Rules &amp; Filters</h3>
+<div class="filter-group exp-feature">
+<label for="destFilter" id="destLabel">Destination Type:</label>
+<select id="destFilter" onchange="updateFilters()">
+<option id="optStd" value="standard">Standard Commercial</option>
+<option value="amazon">Amazon FBA</option>
+<option value="walmart">Walmart DC</option>
+</select>
+</div>
+<div class="filter-group exp-feature">
+<label for="productFilter" id="prodLabel">Special Commodity:</label>
+<select id="productFilter" onchange="updateFilters()">
+<option id="optNone" value="none">General / FAK</option>
+<option id="optTob" value="tobacco">Tobacco / Cigarettes</option>
+<option id="optAlc" value="alcohol">Alcohol</option>
+<option id="optVap" value="vape">Vape Products</option>
+<option id="optFire" value="firearms">Firearms / Ammunition</option>
+</select>
+</div>
+<div class="filter-group exp-feature">
+<label for="insuranceInput" id="insLabel">Additional Insurance ($):</label>
+<input id="insuranceInput" inputmode="decimal" oninput="handleInsuranceInput()" placeholder="0.00" type="text"/>
+<div class="insurance-reminder" id="insuranceReminder">Reminder: calculate Insurance first in CABO (Priority1 calculator).</div>
+<div class="insurance-alert" id="insuranceAlert" style="display:none;"></div>
+</div>
+<div class="checkbox-group exp-feature">
+<input id="liftgateFilter" onchange="updateFilters()" type="checkbox"/>
+<label for="liftgateFilter" id="liftLabel">Force Liftgate Rule Warning</label>
+</div>
+<div class="checkbox-group exp-feature">
+<input id="cubicFilter" onchange="updateFilters()" type="checkbox"/>
+<label for="cubicFilter" id="cubicLabel">Overlength / Cubic Capacity Rule Applies</label>
+</div>
+</div>
+<button class="text-button rule-settings-link" onclick="openSettings()"><svg aria-hidden="true" class="icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" viewbox="0 0 24 24"><path d="M4 7h8m4 0h4M4 17h3m4 0h9"></path><circle cx="14" cy="7" r="2"></circle><circle cx="9" cy="17" r="2"></circle></svg><span data-ui-text="rulesOptions">Shipment rules &amp; options</span><span aria-hidden="true">→</span></button><div class="source-note"><span class="note-label" data-ui-text="sourceNoteTitle">BEFORE YOU SEND</span><p data-ui-text="sourceNote">Review service, liability, and accessorials with the carrier. Transit times are estimates.</p></div></div>
+<div class="results-section">
+<div id="quoteSummaryContainer"></div>
+<div class="panel panel-elevated panel-results" id="resultsPanel">
+<div class="results-toolbar"><div class="results-title"><div class="result-heading-slot"><h3 id="resultCount">Results</h3></div><p aria-live="polite" id="selectionSummary"></p></div><div class="export-actions"><button class="secondary-btn" disabled="" id="previewEmailBtn" onclick="openEmailPreview()"><svg aria-hidden="true" class="icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" viewbox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg><span data-ui-text="preview">Preview email</span></button><button class="primary-btn" disabled="" id="copyBtn" onclick="copyForEmail()">📋 Copy for Email</button></div></div><div class="table-options"><div class="sort-options"><span data-ui-text="sortBy">Sort by</span><div class="sort-slot"><select aria-label="Sort carrier rates" id="sortFilter" onchange="renderTable()">
+<option id="optSortCheap" value="cheapest">Sort: Cheapest</option>
+<option id="optSortFast" value="fastest">Sort: Fastest</option>
+</select></div><span class="currency-label">USD</span></div><details class="view-options"><summary><svg aria-hidden="true" class="icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" viewbox="0 0 24 24"><path d="M4 7h8m4 0h4M4 17h3m4 0h9"></path><circle cx="14" cy="7" r="2"></circle><circle cx="9" cy="17" r="2"></circle></svg><span data-ui-text="displayOptions">Display options</span></summary><div class="view-options-menu"><div class="split-slot"><label class="toolbar-inline-check">
+<input checked="" id="separateRateTypes" onchange="renderTable()" type="checkbox"/>
+<span id="lblSeparateRates">Separate LTL/Volume</span>
+</label></div><div class="internal-slot"><div id="internalColsFilters" style="display:none;">
+<label>
+<input id="exportCarrierCost" onchange="renderTable()" type="checkbox"/>
+<span id="lblCarrierCost">Carrier Cost</span>
+</label>
+<label>
+<input id="exportMargin" onchange="renderTable()" type="checkbox"/>
+<span id="lblMargin">Margin</span>
+</label>
+</div></div><div class="theme-slot"><div class="theme-dropdown-wrapper">
+<label class="hide-mobile" for="emailTheme" id="lblEmailTheme">Email Theme:</label>
+<select class="email-theme-select" id="emailTheme" onchange="if(this.value === 'custom') { openBranding(); } else { renderTable(); }">
+<option id="thmDef" value="default">Default</option>
+<option id="thmMono" value="monochrome">Monochrome</option>
+<option id="thmViv" value="vivid">Vivid</option>
+<option id="thmFem" value="feminine">Feminine</option>
+<option id="thmNav" value="navy">Navy</option>
+<option id="thmCorp" value="corporate">Corporate</option>
+<option id="thmFor" value="forest">Forest</option>
+<option id="thmEar" value="earth">Earthy</option>
+<option id="thmMid" value="midnight">Midnight</option>
+<option id="thmSla" value="slate">Slate</option>
+<option id="thmCustom" value="custom">Custom...</option>
+</select>
+</div></div></div></details></div><div class="batch-slot"><div class="batch-export-controls" id="batchExportControls" style="display:none;">
+<label class="toolbar-inline-check">
+<input checked="" id="batchShowTableView" onchange="renderTable()" type="checkbox"/>
+<span id="lblBatchShowTableView">Show table view</span>
+</label>
+<label class="toolbar-inline-check">
+<input id="batchCheapestOnly" onchange="renderTable()" type="checkbox"/>
+<span id="lblBatchCheapestOnly">Cheapest rate only</span>
+</label>
+<label class="toolbar-inline-check">
+<input id="batchInlineLayout" onchange="updateBatchExportControls()" type="checkbox"/>
+<span id="lblBatchInlineLayout">Inline spreadsheet layout</span>
+</label>
+<label class="toolbar-inline-check">
+<input id="batchSpreadsheetRates" onchange="updateBatchExportControls()" type="checkbox"/>
+<span id="lblBatchSpreadsheetRates">Include spreadsheet rates</span>
+</label>
+<div class="batch-rate-count-group">
+<span id="lblBatchInlineRateCount">Rates per quote</span>
+<select id="batchInlineRateCount" onchange="updateBatchExportControls()">
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+</select>
+</div>
+<div class="batch-inline-helper" id="batchInlineHelper"></div>
+</div></div>
+<div aria-label="Carrier comparison table" class="table-container" role="region" tabindex="0">
+<table aria-label="Available LTL carrier rates" id="quotesTable">
+<thead>
+<tr id="tableHeadersRow">
+<th id="thCarrier">Carrier</th>
+<th id="thRate">Rate</th>
+<th id="thLiability">Liability</th>
+<th id="thTransit">Transit</th>
+<th id="thNotes">Notes &amp; Rules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td colspan="8">
+<div class="empty-state" id="emptyText">
                                             Paste quote data in the left panel and click Parse.
                                         </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="disclaimer-footer" id="disclaimerText">
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="table-footer"><span aria-hidden="true" class="selection-indicator"></span><span data-ui-text="exportHint">Only selected carriers are included in the email.</span><span class="table-footer-end" data-ui-text="customerRates">Customer rates</span></div></div>
+<div class="disclaimer-footer" id="disclaimerText">
                     ⚠️ <strong>Disclaimer:</strong> This tool provides rule-based recommendations. Always verify final requirements with your client and check updated carrier tariffs.
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-extras" class="tab-pane">
-        <div class="grid" style="grid-template-columns: 1fr; max-width: 900px; margin: 0 auto;">
-            <div class="panel">
-                <h3 id="extHazTitle">☢️ Hazmat / NMFC Quick Search</h3>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;" id="extHazDesc">Quickly search for Hazmat classes, common NMFC numbers, or UN# without leaving the tool.</p>
-                <input type="text" id="hazmatSearch" placeholder="Ex. 1203, UN1203, Explosives, Batteries..." onkeyup="searchHazmat()" style="width: 100%;">
-                <div id="hazmatResults" style="max-height: 500px; overflow-y: auto; margin-top: 16px; padding: 0 4px;"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-dev" class="tab-pane">
-        <div class="grid" style="grid-template-columns: 1fr; max-width: 1100px; margin: 0 auto;">
-            <div class="panel panel-elevated">
-                <div id="devLockedView">
-                    <h3 style="margin:0 0 12px 0;">Developer Mode</h3>
-                    <p class="dev-mode-intro">Unlock the local liftgate rules editor. This is a local working copy only and does not overwrite the default published rules unless you explicitly export and publish them later.</p>
-                    <div class="filter-group" style="max-width: 360px;">
-                        <label for="devPassword">Password</label>
-                        <input type="password" id="devPassword" placeholder="Enter developer password">
-                    </div>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px;">
-                        <button class="primary-btn" style="flex: initial;" onclick="unlockDevMode()">Unlock Dev Mode</button>
-                    </div>
-                    <div id="devUnlockMsg" class="dev-inline-note"></div>
-                </div>
-
-                <div id="devUnlockedView" style="display:none;">
-                    <div class="dev-toolbar">
-                        <div>
-                            <h3 style="margin:0; border:none; padding:0;">Liftgate Rules Editor</h3>
-                            <div class="dev-inline-note">Editing local working copy of <code>liftgate.json</code>. Default rules remain available and unchanged until you export and publish them.</div>
-                        </div>
-                        <div class="dev-toolbar-actions">
-                            <button class="secondary-btn" onclick="previewWorkingLiftgateRules()">Preview Working Copy</button>
-                            <button class="secondary-btn" onclick="useDefaultLiftgateRules()">Use Default Rules</button>
-                            <button class="secondary-btn" onclick="resetLiftgateWorkingCopy()">Reset Working Copy</button>
-                            <button class="primary-btn" onclick="exportLiftgateRulesJson()">Export JSON</button>
-                        </div>
-                    </div>
-
-                    <div class="dev-status-strip">
-                        <span class="dev-status-badge" id="devSourceBadge">Using default rules</span>
-                        <span class="dev-status-badge" id="devDirtyBadge">No local edits</span>
-                    </div>
-
-                    <div class="dev-editor-actions">
-                        <input type="text" id="devCarrierSearch" placeholder="Search carrier..." oninput="renderLiftgateEditor()">
-                        <button class="secondary-btn" onclick="addLiftgateCarrier()">Add Carrier</button>
-                    </div>
-
-                    <div id="liftgateEditorList" class="dev-editor-list"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </div>
-
-<div id="copyToast" class="toast-notification">
-    <span>✅</span> <span id="toastMsg">Copied to clipboard!</span>
 </div>
-
-<div id="updateToast" class="toast-notification" style="background-color: var(--primary); display: none; flex-direction: column; align-items: flex-start; z-index: 3000;">
-    <div style="font-weight: bold; margin-bottom: 4px;" id="updateToastMsg">New version available!</div>
-    <button onclick="location.reload(true)" style="background: white; color: var(--primary); border: none; padding: 4px 8px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem;" id="updateToastBtn">Click to refresh</button>
 </div>
-
+<div class="tab-pane" id="view-extras">
+<div class="grid">
+<div class="panel">
+<h3 id="extHazTitle">Hazmat / NMFC reference</h3>
+<p id="extHazDesc">Quickly search for Hazmat classes, common NMFC numbers, or UN# without leaving the tool.</p>
+<input id="hazmatSearch" onkeyup="searchHazmat()" placeholder="Ex. 1203, UN1203, Explosives, Batteries..." type="text"/>
+<div id="hazmatResults"></div>
+</div>
+</div>
+</div>
+<div class="tab-pane" id="view-dev">
+<div class="grid">
+<div class="panel panel-elevated">
+<div id="devLockedView">
+<h3>Developer Mode</h3>
+<p class="dev-mode-intro">Unlock the local liftgate rules editor. This is a local working copy only and does not overwrite the default published rules unless you explicitly export and publish them later.</p>
+<div class="filter-group">
+<label for="devPassword">Password</label>
+<input id="devPassword" placeholder="Enter developer password" type="password"/>
+</div>
+<div>
+<button class="primary-btn" onclick="unlockDevMode()">Unlock Dev Mode</button>
+</div>
+<div class="dev-inline-note" id="devUnlockMsg"></div>
+</div>
+<div id="devUnlockedView" style="display:none;">
+<div class="dev-toolbar">
+<div>
+<h3>Liftgate Rules Editor</h3>
+<div class="dev-inline-note">Editing local working copy of <code>liftgate.json</code>. Default rules remain available and unchanged until you export and publish them.</div>
+</div>
+<div class="dev-toolbar-actions">
+<button class="secondary-btn" onclick="previewWorkingLiftgateRules()">Preview Working Copy</button>
+<button class="secondary-btn" onclick="useDefaultLiftgateRules()">Use Default Rules</button>
+<button class="secondary-btn" onclick="resetLiftgateWorkingCopy()">Reset Working Copy</button>
+<button class="primary-btn" onclick="exportLiftgateRulesJson()">Export JSON</button>
+</div>
+</div>
+<div class="dev-status-strip">
+<span class="dev-status-badge" id="devSourceBadge">Using default rules</span>
+<span class="dev-status-badge" id="devDirtyBadge">No local edits</span>
+</div>
+<div class="dev-editor-actions">
+<input id="devCarrierSearch" oninput="renderLiftgateEditor()" placeholder="Search carrier..." type="text"/>
+<button class="secondary-btn" onclick="addLiftgateCarrier()">Add Carrier</button>
+</div>
+<div class="dev-editor-list" id="liftgateEditorList"></div>
+</div>
+</div>
+</div>
+</div>
+<footer class="workspace-footer"><span>SMART LTL <span class="footer-divider">/</span> <span data-ui-text="footerDesk">Quote desk</span></span><span data-ui-text="footerStorage">Quote processing runs in your browser.</span></footer></div>
+<div aria-live="polite" class="toast-notification" id="copyToast" role="status">
+<span>✓</span> <span id="toastMsg">Copied to clipboard!</span>
+</div>
+<div class="toast-notification" id="updateToast" style="display:none;">
+<div id="updateToastMsg">New version available!</div>
+<button id="updateToastBtn" onclick="location.reload(true)">Click to refresh</button>
+</div>
 <script src="./script.js"></script>
-</body>
+<script src="./workspace-ui.js"></script></body>
 </html>
