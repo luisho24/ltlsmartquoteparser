@@ -169,7 +169,7 @@
             }
         }
 
-        const service = cols.find(col => /(Standard Rate|Economy|Priority|LTL Standard Transit|Market Rate|Standard Service|Standard|Interline|TLX|TLS|EXCL|Guaranteed|One Rate One Time)/i.test(col)) || 'Standard';
+        const service = cols.slice(1).find(col => /(Truckload Expedited Team|Truckload Expedited Solo|Truckload Expedited|Volume and Truckload Basic|Standard Rate|Economy|Priority|LTL Standard Transit|Market Rate|Standard Service|Standard|Interline|TLX|TLS|EXCL|Guaranteed|One Rate One Time)/i.test(col)) || 'Standard';
         const expiration = cols.find(col => /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(col)) || '-';
         const margin = parsePercentValue(cols.find(col => /^\d+(?:[.,]\d+)?%$/.test(col)) || '-');
         const daysCol = [...cols].reverse().find(col => /^\d{1,3}$/.test(col) || /^\d{1,3}\s*Days?$/i.test(col));
@@ -195,7 +195,19 @@
 
     function sanitizeQuoteInputText(rawText) {
         let text = String(rawText || '');
+        text = text.replace(/&#(x[0-9a-f]+|\d+);/gi, (_, value) => {
+            const code = /^x/i.test(value) ? parseInt(value.slice(1), 16) : Number(value);
+            return code <= 0x10ffff ? String.fromCodePoint(code) : '';
+        }).replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/\*\*/g, '');
+        text = text.split(/\r?\n/).map(line => {
+            if (!/^\s*\|.*\|\s*$/.test(line)) return line;
+            const cols = line.trim().slice(1, -1).split('|').map(col => col.replace(/⠀/g, '').trim());
+            if (cols.every(col => /^:?-+:?$/.test(col))) return '';
+            return cols.map(col => col || '-').join('\t');
+        }).join('\n');
         text = text.replace(/⠀/g, '\t');
+        // Some CRM copies join the carrier reference directly to the customer price.
+        text = text.replace(/(\$[\d,]+\.\d{2})([A-Z0-9_-]+)(?=\t)/gi, '$1\t$2');
         text = text.replace(/Quote Id:\s*([A-Za-z0-9_-]+)(From:)/gi, 'Quote Id: $1\n$2');
         text = text.replace(/(\$[0-9,]+\.\d{2})(\d{1,3})\s*(Day|Days)\b/gi, '$1 $2 $3');
         text = text.replace(/LTL Rates:/gi, '\nLTL Rates:\n').replace(/Volume Rates:/gi, '\nVolume Rates:\n');
@@ -216,13 +228,13 @@
         let seenQuoteId = false;
 
         lines.forEach(line => {
-            if (/^quote id:/i.test(line) && seenQuoteId && current.length) {
+            if (/^(?:quote id|quote):/i.test(line) && seenQuoteId && current.length) {
                 blocks.push(current.join('\n'));
                 current = [];
             }
 
             current.push(line);
-            if (/^quote id:/i.test(line)) seenQuoteId = true;
+            if (/^(?:quote id|quote):/i.test(line)) seenQuoteId = true;
         });
 
         if (current.length) blocks.push(current.join('\n'));
@@ -249,7 +261,95 @@
         };
     }
 
+    // Convert native dashboard cards and grids into the same input used by CRM exports.
+    function convertNativePriority1Text(text) {
+        text = String(text || '').replace(/\r\n?/g, '\n');
+        const money = '[\\d,]+\\.\\d{2}';
+        const cards = [...text.matchAll(new RegExp(`^\\$(${money})[ \\t]*\\n([^\\n]+?)\\s*\\|\\s*[A-Z0-9]{2,4}[ \\t]*\\n([^\\n]+)`, 'gm'))];
+        const grids = [...text.matchAll(new RegExp(`^([^\\n$]+?(?:\\n[^\\n$]+?)?)[ \\t\\n]*(\\d{1,3})\\s*\\$(${money})\\s*(?:\\x24${money}\\s*)?\\$(${money})\\s*New:\\s*\\$(${money})\\s*Used:\\s*\\$(${money})\\s*(\\d{1,2}/\\d{1,2}/\\d{4})\\s*(\\d+(?:\\.\\d+)?)%`, 'gmi'))];
+        if (!cards.length && !grids.length) return text;
+
+        const canonical = name => name.trim().replace(/^(?:randl|r&l)(?: carriers)?$/i, 'R&L Carriers');
+        const classify = (service, position) => {
+            const headings = [...text.slice(0, position).matchAll(/\b(Expedited(?: Truckload)?|LTL|Volume)\s+Rates\s*:?/gi)];
+            const heading = headings.length ? headings[headings.length - 1][1] : 'LTL';
+            if (/expedited/i.test(service) || /^expedited/i.test(heading)) return 'Expedited';
+            return /volume|truckload/i.test(service) || /^volume$/i.test(heading) ? 'Volume' : 'LTL';
+        };
+        const rates = cards.map((match, index) => {
+            // Stop at the next card or summary heading; fields cannot leak between carriers.
+            const end = index + 1 < cards.length ? cards[index + 1].index : text.length;
+            const block = text.slice(match.index + match[0].length, end).split(/\b(?:Expedited(?: Truckload)?|LTL|Volume)\s+Rates\s*:?/i)[0];
+            const field = label => block.match(new RegExp(`${label}\\s*\\n([^\\n]+)`, 'i'))?.[1].trim() || '-';
+            return { carrier: canonical(match[2]), cost: match[1], service: match[3].trim(),
+                rateType: classify(match[3], match.index), days: field('Transit Days'),
+                liability: `${field('Carrier Liability New').replace(/\$/g, '')}/${field('Carrier Liability Used').replace(/\$/g, '')}`,
+                quoteNumber: field('Quote Id'), expiration: field('Quote Exp\\. Date'), carrierCost: '', margin: '-' };
+        });
+        const names = [...new Set([...rates.map(rate => rate.carrier),
+            'Old Dominion Freight Line', 'Saia LTL Freight', 'Dayton Freight Lines', 'R&L Carriers',
+            'FedEx Economy', 'FedEx Priority', 'Central Transport', 'TForce Freight', 'ABF Freight',
+            'AAA Cooper', 'Custom Companies', 'Moran Transportation', 'Diamond Line Delivery',
+            'N&M Transfer', 'Go2 Logistics', 'Estes', 'Old Dominion', 'Saia', 'XPO', 'Averitt',
+            'Ward', 'Pitt Ohio', 'Double D Express', 'Tax Airfreight', 'Forward', 'Magnum', 'Roadrunner', 'WARP'])]
+            .sort((a, b) => b.length - a.length);
+        for (const match of grids) {
+            let combined = match[1].replace(/.*Margin\s*/i, '').replace(/^(?:Expedited(?: Truckload)?|LTL|Volume)\s+Rates\s*:?\s*/i, '').replace(/\n/g, ' ').trim();
+            const name = names.find(name => combined.toLowerCase().startsWith(name.toLowerCase()));
+            // Unknown carriers remain intact when service is on its own line.
+            const parts = combined.split(/\s+(?=Standard|Economy|Priority|Guaranteed|Market|Interline)/i);
+            const carrier = canonical(name || parts.shift());
+            const service = name ? combined.slice(name.length).trim() || 'Standard' : parts.join(' ') || 'Standard';
+            const rateType = classify(service, match.index + match[1].length);
+            const matching = rates.filter(rate => rate.carrier.toLowerCase() === carrier.toLowerCase() && rate.cost === match[3]);
+            const existing = matching.find(rate => rate.rateType === rateType) || (matching.length === 1 && !matching[0].fromGrid ? matching[0] : null);
+            const data = { carrier, cost: match[3], carrierCost: match[4], liability: `${match[5]}/${match[6]}`,
+                days: match[2], expiration: match[7], margin: `${match[8]}%`, rateType, fromGrid: true,
+                service: /interline/i.test(service) && existing && !/interline/i.test(existing.service) ? `${existing.service} Interline` : existing?.service || service };
+            if (existing) Object.assign(existing, data);
+            else rates.push({ ...data, quoteNumber: '-' });
+        }
+        const lines = [];
+        const id = text.match(/(?:Quote Id|Quote):\s*([\w-]+)/i)?.[1] || '-';
+        lines.push(`Quote Id: ${id}`);
+        for (const [label, aliases, end] of [
+            ['From', 'From|Shipper', '\\n(?:\\d{1,2}/\\d{1,2}/\\d{4}|To:|Consignee:|Items:?|Accessorials:?)'],
+            ['To', 'To|Consignee', '\\n(?:Items:?|Accessorials:?|Total weight:|Carriers search|LTL\\b)']
+        ]) {
+            const value = text.match(new RegExp(`(?:${aliases}):[ \\t]*\\n?([\\s\\S]*?)(?=${end}|$)`, 'i'))?.[1];
+            lines.push(`${label}: ${value ? value.trim().replace(/\n+/g, ', ') : '-'}`);
+        }
+        lines.push('Items:');
+        const items = text.match(/Items:?\s*\n([\s\S]*?)(?=Total weight:|Accessorials:?|Carriers search|Expedited\b|LTL\b|\n\$|$)/i)?.[1] || '';
+        if (/^Weight:/im.test(items)) {
+            const itemLines = items.split('\n').map(line => line.trim()).filter(Boolean);
+            let item = null;
+            const flush = () => { if (item) lines.push(`${item.title} - ${item.pieces} Piece(s) - ${item.weight} - ${item.dims}`); };
+            for (let i = 0; i < itemLines.length; i++) {
+                const line = itemLines[i];
+                if (/^Piece/i.test(line)) {
+                    flush(); item = { title: itemLines[i - 1] || 'Item', pieces: itemLines[i + 1] || '1', weight: '', dims: '' };
+                } else if (/^Weight:/i.test(line)) {
+                    if (!item) item = { title: itemLines[i - 1] || 'Item', pieces: '1', dims: '' };
+                    item.weight = line.slice(7).trim() || itemLines[i + 1] || '';
+                } else if (/^Dimensions:/i.test(line) && item) item.dims = line.slice(11).trim() || itemLines[i + 1] || '';
+            }
+            flush();
+        } else lines.push(items.trim());
+        const accessorials = text.match(/Accessorials:?\s*\n([\s\S]*?)(?=Total weight:|Carriers search|Expedited\b|LTL\b|Volume\b|Sort by|Items:?|\n\$|$)/i)?.[1];
+        if (accessorials) lines.push('Accessorials:', accessorials.replace(/accepted/gi, '').split('\n').filter(line => !/HARDCODED/i.test(line)).join('\n'));
+        for (const type of ['Expedited', 'LTL', 'Volume']) {
+            const group = rates.filter(rate => rate.rateType === type);
+            if (!group.length) continue;
+            lines.push(`${type === 'Expedited' ? 'Expedited Truckload' : type} Rates:`, 'Carrier\tCustomer Cost\tCarrier Cost\tQuote #\tLiability\tService\tExpiration\tMargin\tTransit');
+            for (const rate of group) lines.push([rate.carrier, '$' + rate.cost, rate.carrierCost ? '$' + rate.carrierCost : '-', rate.quoteNumber,
+                'NEW: $' + rate.liability.replace('/', ' USED: $'), rate.service.replace(/Volume$/i, '').trim() || 'Standard', rate.expiration, rate.margin, `${rate.days} Days`].join('\t'));
+        }
+        return lines.join('\n');
+    }
+
     function parseSingleQuoteText(blockText, defaults, index) {
+        blockText = convertNativePriority1Text(blockText);
         const lines = sanitizeQuoteInputText(blockText)
             .split('\n')
             .map(l => l.trim())
@@ -270,6 +370,7 @@
             if (lowerLine === 'items' || lowerLine.startsWith('items / pallets') || lowerLine === 'items:' || lowerLine === 'items / details') { mode = 'items'; continue; }
             if (lowerLine.includes('ltl rates') || lowerLine.includes('ltl rates:')) { mode = 'rates'; currentRateType = 'LTL'; continue; }
             if (lowerLine.includes('volume rates') || lowerLine.includes('volume rates:')) { mode = 'rates'; currentRateType = 'Volume'; continue; }
+            if (/^expedited(?: truckload)? rates:?$/i.test(lowerLine)) { mode = 'rates'; currentRateType = 'Expedited'; continue; }
 
             if (mode === 'header') {
                 if (lowerLine.startsWith('quote id:') || lowerLine.startsWith('quote:')) {
@@ -389,7 +490,7 @@
                     if (q.hasInternalCols && dollarPrices.length >= 2) carrierCost = dollarPrices[1];
 
                     let service = 'Standard';
-                    let serviceMatch = line.match(/(Standard Rate|Economy|Priority|LTL Standard Transit|Market Rate|Standard Service|Standard|Interline|TLX|TLS|EXCL|Guaranteed|One Rate One Time)/i);
+                    let serviceMatch = line.match(/(Truckload Expedited Team|Truckload Expedited Solo|Truckload Expedited|Volume and Truckload Basic|Standard Rate|Economy|Priority|LTL Standard Transit|Market Rate|Standard Service|Standard|Interline|TLX|TLS|EXCL|Guaranteed|One Rate One Time)/i);
                     if (serviceMatch) service = serviceMatch[1];
 
                     let days = extractTransitDays(line);
@@ -451,7 +552,8 @@
         return (quotes || []).map((quote, index) => {
             const q = quote || {};
             const rates = q.processedRates && q.processedRates.length ? q.processedRates : (q.rawRates || []);
-            const ltlRates = rates.filter(rate => rate.rateType !== 'Volume');
+            const expeditedRates = rates.filter(rate => rate.rateType === 'Expedited');
+            const ltlRates = rates.filter(rate => rate.rateType !== 'Volume' && rate.rateType !== 'Expedited');
             const volumeRates = rates.filter(rate => rate.rateType === 'Volume');
             const hasInternalCols = !!q.hasInternalCols || rates.some(rate => rate.carrierCost || (rate.margin && rate.margin !== '-'));
             const lines = [q.label || (index > 0 ? `Quote #${index + 1}` : 'Priority 1 Quote')];
@@ -478,6 +580,7 @@
                 groupRates.forEach(rate => lines.push(formatRateLine(rate, hasInternalCols)));
             };
 
+            appendRateGroup('Expedited Truckload Rates', expeditedRates);
             appendRateGroup('LTL Rates', ltlRates);
             appendRateGroup('Volume Rates', volumeRates);
             return lines.join('\n');

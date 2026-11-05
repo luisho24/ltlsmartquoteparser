@@ -316,7 +316,7 @@ const dict = {
         thCarrier: "Carrier", thRate: "Tarifa", thLiability: "Responsabilidad", thTransit: "Tránsito", thEmailTransit: "Tiempo de tránsito estimado", thNotes: "Notas & Reglas",
         emptyText: "Pega los datos en el panel izquierdo y presiona Analizar Cotización.", resCount: "Resultados ({0} viables)",
         statOk: "Compatible", statWarn: "Con Restricciones", statBanned: "Prohibido:", statRestr: "Restringido:",
-        day: "Día", days: "Días", rateLTL: "LTL", rateVol: "Volumen",
+        day: "Día", days: "Días", rateLTL: "LTL", rateVol: "Volumen", rateExpedited: "Camión completo urgente",
         warnLiftgate: "Precaución Liftgate", warnCubic: "Regla Capacidad/Longitud", placeholder: "Pega aquí tu cotización exportada de Priority1 o texto libre (Quote Id, From, To, Items, Rates)...",
         copyBtn: "📋 Copiar para Correo", exportBtn: "📁 Exportar CSV", exportPdfBtn: "📄 PDF", lblIncludeNotes: "Incluir Notas",
         msgCopied: "Las tarifas se copiaron correctamente al portapapeles",
@@ -341,7 +341,7 @@ const dict = {
         volDisclaimer: "<strong>Tarifas LTL vs Volumen:</strong> Las tarifas LTL son la estructura estándar para envíos pequeños. En contraste, las tarifas de Volumen se basan en el espacio lineal y peso para cargas que exceden dimensiones estándar. Las tarifas de volumen ofrecen grandes ahorros pero pueden tener menor disponibilidad o tiempos de tránsito variables.",
         lblLocalTime: "Hora Local", lblPickupNear: "Cut-off cerca", lblPickupLate: "Cut-off pasado",
         waitingRates: "⏳ Esperando tarifas del carrier...",
-        lblCarrierCost: "Costo Carrier", lblMargin: "Margen", lblExpDate: "F. Expiración",
+        lblCarrierCost: "Costo Carrier", lblMargin: "Margen", lblExpDate: "Fecha de vencimiento de la tarifa",
         'btn-tab-analyzer': "Parser", 'btn-tab-extras': "Extras",
         extHazTitle: "☢️ Búsqueda Rápida Hazmat / NMFC", extHazDesc: "Busca rápidamente clases de Hazmat, números UN# o NMFC comunes sin salir de la herramienta.", hazmatPlaceholder: "Ej. 1203, UN1203, Explosives, Baterías...",
         appThmDef: "🎨 Por defecto", appThmMono: "⚫ Monocromo", appThmViv: "🌈 Vivos", appThmFem: "🌸 Femenino", appThmNav: "🌌 Navy", appThmCorp: "🏢 Corporativo", appThmFor: "🌲 Bosque", appThmEar: "🟤 Tierra", appThmMid: "🌙 Medianoche", appThmSla: "📓 Pizarra",
@@ -362,7 +362,7 @@ const dict = {
         thCarrier: "Carrier", thRate: "Rate", thLiability: "Liability", thTransit: "Transit", thEmailTransit: "Estimated Transit time", thNotes: "Notes & Rules",
         emptyText: "Paste quote data in the left panel and click Parse Quote Data.", resCount: "Results ({0} viable)",
         statOk: "Compatible", statWarn: "With Restrictions", statBanned: "Banned:", statRestr: "Restricted:",
-        day: "Day", days: "Days", rateLTL: "LTL", rateVol: "Volume",
+        day: "Day", days: "Days", rateLTL: "LTL", rateVol: "Volume", rateExpedited: "Expedited Truckload",
         warnLiftgate: "Liftgate Warning", warnCubic: "Cubic/Length Rule", placeholder: "Paste your Priority1 exported quote or freeform text here...",
         copyBtn: "📋 Copy for Email", exportBtn: "📁 CSV", exportPdfBtn: "📄 PDF", lblIncludeNotes: "Include Notes",
         msgCopied: "Rates copied to clipboard successfully",
@@ -387,7 +387,7 @@ const dict = {
         volDisclaimer: "<strong>LTL vs Volume Rates:</strong> The LTL rate is designed for smaller shipments that don't fill a truck's capacity. In contrast, volume rates are based on linear feet and weight for larger shipments. Volume rates offer potential savings but may have less availability and variable transit times.",
         lblLocalTime: "Local Time", lblPickupNear: "Pickup cut-off nearing", lblPickupLate: "Likely too late for today",
         waitingRates: "⏳ Waiting for carrier rates...",
-        lblCarrierCost: "Carrier Cost", lblMargin: "Margin", lblExpDate: "Exp. Date",
+        lblCarrierCost: "Carrier Cost", lblMargin: "Margin", lblExpDate: "Rate Expiration date",
         'btn-tab-analyzer': "Parser", 'btn-tab-extras': "Extras",
         extHazTitle: "☢️ Hazmat / NMFC Quick Search", extHazDesc: "Quickly search for Hazmat classes, common NMFC numbers, or UN# without leaving the tool.", hazmatPlaceholder: "Ex. 1203, UN1203, Explosives, Batteries...",
         appThmDef: "🎨 Default", appThmMono: "⚫ Monochrome", appThmViv: "🌈 Vivid", appThmFem: "🌸 Feminine", appThmNav: "🌌 Navy", appThmCorp: "🏢 Corporate", appThmFor: "🌲 Forest", appThmEar: "🟤 Earthy", appThmMid: "🌙 Midnight", appThmSla: "📓 Slate",
@@ -532,10 +532,23 @@ async function checkForUpdates() {
     } catch (e) {}
 }
 
+function getExpeditedLogoHtml() {
+    // PNG, HTML, and CSS share the same dimensions.
+    return '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAQCAYAAAD52jQlAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIHSURBVDhPfZTNihNBFIW/hQjiC4ggbkTdKLoSXLjwFURxJyLuBMd5BRc+g4i4ElF0IepaFHEh7kx3ded3kplJnEkmCQyKkq57pa4hdnc6FlwSqFPfOXW7qpCEV9pn6h1jn/wr6TH2js8AWcy69NmXsqbBWFpsScTxoFsMSbmk31HtoNou1R4qCdekxyGfsq/bqLZy8+H/BPUxjwvQMHzEG91BxRlkUdpDfUInaLKIuzoqzpumgfoWmThOFaCScFY6iNYrFg1Ribhl5inb2i1pHKq7qK/xvAC1BRHPwuRS2gBJ6Zu546aZlI3rf9v3u8a5AvRXzElpM9NmxaIRmsWszcGt0JaltDuoj3hbgIbhIx5Vpu2gPmVPaxzMIq5a/8vGIe2mrb1YgGqNI9JgEr7qUpIR6h0PzNzxxQBl8MC0nwpQcRzVBtNVUEm4P4d+XQX1jo8FqI94Urn9DdTXGep7DkjKddOUgWH7odcRFxZATTgtbbJw7ipTxtwx44SN/3yo1/mQ+JgXlSm7dgG2giaLub3qAkgbEceZBVAizoctrjz8MTfMOGWw6vBLzNNcRpCYd5XXdNMa35xr1i1lWdO0azqTBicWwFnC5eBkSfOPSXhg9tCZ44oMOOzr/LAHpfzoTC3lw3zI0PiXMmDoHbv5kq79fggaSbgnfSY+LmmaVp2f3ziWZ/4BKtHtdqQ5mXAAAAAASUVORK5CYII=" alt="Expedited" width="21" height="16" style="width:21px; height:16px; min-width:21px; max-width:21px; min-height:16px; max-height:16px; vertical-align:middle; margin-right:6px; border:0; display:inline-block;">';
+}
+
+function getExpeditedCarrierHtml(textColor, mutedColor) {
+    return '<span style="display:inline-block; vertical-align:middle; line-height:1.35; text-align:left;">' +
+        '<strong style="display:block; font-size:13px; font-weight:700; color:' + textColor + ';">Priority1</strong>' +
+        '<span style="display:block; margin-top:3px; font-size:11px; font-weight:600; color:' + mutedColor + '; white-space:nowrap;">' + getExpeditedLogoHtml() + 'Expedited Truckload</span></span>';
+}
+
 function getCarrierLogo(normalizedName) {
     const baseUrl = './logos/';
-    const n = normalizedName.toLowerCase();
+    const n = String(normalizedName || '').toLowerCase().trim().replace(/\s+/g, ' ');
     const iconMap = {
+        'priority1 - expedited truckload': 'expedited-arrows.png',
+        'priority1': 'priority1.png',
         'aaa cooper': 'aaa-cooper.png',
         'abf': 'abf.png',
         'abf freight': 'abf-freight.png',
@@ -547,6 +560,9 @@ function getCarrierLogo(normalizedName) {
         'averitt': 'averitt.png',
         'averitt express': 'averitt-express.png',
         'central transport': 'central-transport.png',
+        'ceva': 'ceva-logistics.png',
+        'ceva freight': 'ceva-logistics.png',
+        'ceva logistics': 'ceva-logistics.png',
         'cross country': 'cross-country-freight-solutions.png',
         'cross country freight solutions': 'cross-country-freight-solutions.png',
         'custom companies': 'custom-companies.png',
@@ -594,7 +610,125 @@ function getCarrierLogo(normalizedName) {
         'ward trucking': 'ward-trucking.png',
         'xpo': 'xpo.png'
     };
-    if (iconMap[n]) return baseUrl + iconMap[n];
+    // Only emit paths for bundled assets; unknown carriers keep their text label.
+    const availableLogos = new Set([
+        'expedited-arrows.png',
+        'priority1.png',
+        "2-day-transportation.png",
+        "a-b-freight-line.png",
+        "a-duie-pyle.png",
+        "aaa-cooper.png",
+        "aberdeen-express.png",
+        "abf (1).png",
+        "abf-freight.png",
+        "abf.png",
+        "accurate-transport.png",
+        "aci-motor-freight.png",
+        "alliance-air-freight.png",
+        "am-trucking.png",
+        "apex-motor-express.png",
+        "averitt-express.png",
+        "averitt.png",
+        "bakston-freight-systems.png",
+        "benjamin-best-freight.png",
+        "best-overnite-express.png",
+        "best-yet-express.png",
+        "brian-kurtz-trucking.png",
+        "c-m-forwarding.png",
+        "central-air-freight.png",
+        "central-transport.png",
+        "ceva-logistics.png",
+        "citywide-delivery.png",
+        "contact-cartage-inc.png",
+        "cross-country-freight-solutions.png",
+        "custom-companies.png",
+        "custom-freight-systems-inc.png",
+        "d-a-truck-line.png",
+        "day-ross.png",
+        "daylight-transport.png",
+        "dayton-freight-lines.png",
+        "dedicated-delivery-professionals-inc.png",
+        "diamond-line-delivery-systems.png",
+        "distribution-solution.png",
+        "dohrn-transfer.png",
+        "dot-line-transportation.png",
+        "double-d-express.png",
+        "dugan-truck-line.png",
+        "edi-express.png",
+        "ediexpress.png",
+        "estes.png",
+        "expediri-transport.png",
+        "fedex-economy (1).png",
+        "fedex-economy.png",
+        "fedex-priority (1).png",
+        "fedex-priority.png",
+        "fort-transportation.png",
+        "forward.png",
+        "frontline-freight.png",
+        "fusion-transport.png",
+        "glova-link-corporation.png",
+        "go2-logistics.png",
+        "hercules-transportation.png",
+        "highlight-motor.png",
+        "ips-logistics.png",
+        "jp-express.png",
+        "l-s-logistic-services.png",
+        "lee-jennings-target-express.png",
+        "lk-transport-llc.png",
+        "magnum.png",
+        "mainfreight-inc.png",
+        "miracle-express.png",
+        "moran-transportation.png",
+        "mountain-valley-express.png",
+        "n-m-transfer.png",
+        "north-park-transportation.png",
+        "northern-logistics.png",
+        "numark-transportation.png",
+        "oak-harbor-freight.png",
+        "old-dominion-freight-line.png",
+        "olddominion.png",
+        "pace-motor-lines.png",
+        "panama-transfer.png",
+        "peninsula-trucklines-inc.png",
+        "performance-freight-systems-inc.png",
+        "pitt-ohio.png",
+        "quality-transportation.png",
+        "r-l-carriers.png",
+        "red-line-freight-systems.png",
+        "rist-transport.png",
+        "rist.png",
+        "rlcarriers.png",
+        "rmx-freight-systems.png",
+        "roadrunner-transportation-systems.png",
+        "ross-express-inc.png",
+        "rude-transportation.png",
+        "saia-ltl-freight.png",
+        "saia.png",
+        "salson-logistics.png",
+        "southeastern-freight.png",
+        "southwestern-motor-transport.png",
+        "specialized-freight-carriers.png",
+        "speedy-transport.png",
+        "sunset-pacific.png",
+        "tax-airfreight.png",
+        "tforce-freight.png",
+        "total-transportation-distribution.png",
+        "truck-1058.svg",
+        "u-s-road-freight-express.png",
+        "unis-transportation.png",
+        "us-cargo.png",
+        "vision-express-transportation.png",
+        "vocar-transportation-services.png",
+        "ward-trucking.png",
+        "warp.png",
+        "white-arrow.png",
+        "xpo (1).png",
+        "xpo.png",
+        "xpress-global-systems-llc.png",
+        "z-null.png",
+        "zip-express-inc.png"
+    ]);
+    if (iconMap[n] && availableLogos.has(iconMap[n])) return baseUrl + iconMap[n];
 
     const fallbackCandidates = [
         n.replace(/[^a-z0-9]+/g, '-') + '.png',
@@ -602,7 +736,8 @@ function getCarrierLogo(normalizedName) {
         n.replace(/\bline\b/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '.png'
     ].filter(Boolean);
 
-    return baseUrl + fallbackCandidates[0];
+    const filename = fallbackCandidates.find(candidate => availableLogos.has(candidate));
+    return filename ? baseUrl + filename : '';
 }
 
 const rules = {
@@ -1190,7 +1325,6 @@ function renderTable() {
         if (exportCarrierCost || exportMargin) headerHtml += `<th style="color:var(--primary); font-weight:700;">${exportCarrierCost ? t.lblCarrierCost : ''} ${exportCarrierCost && exportMargin ? '/' : ''} ${exportMargin ? t.lblMargin : ''}</th>`;
     }
     headerHtml += `<th id="thLiability">${t.thLiability}</th><th id="thTransit">${t.thTransit}</th>`;
-    if (showInternalCols) headerHtml += `<th style="color:var(--primary); font-weight:700;">${t.lblExpDate}</th>`;
     headerHtml += `<th id="thNotes">${t.thNotes}</th>`;
     headerRow.innerHTML = headerHtml;
     const totalCols = headerRow.children.length || 8;
@@ -1289,7 +1423,7 @@ function renderTable() {
             }
 
             const logoUrl = getCarrierLogo(row.normalizedName);
-            const iconHtml = logoUrl ? `<img src="${logoUrl}" style="width: 16px; height: 16px; object-fit: contain; vertical-align: middle; margin-right: 6px; border-radius: 3px;" onerror="this.style.display='none'">` : '';
+            const iconHtml = /^priority1(?:\s*-\s*expedited truckload)?$/i.test(row.normalizedName) ? '' : logoUrl ? `<img src="${logoUrl}" style="width: 16px; height: 16px; object-fit: contain; vertical-align: middle; margin-right: 6px; border-radius: 3px;" onerror="this.style.display='none'">` : '';
 
             let liabilityHtml = '';
             if (row.liability && row.liability !== '-') {
@@ -1300,8 +1434,9 @@ function renderTable() {
             }
 
             let refHtml = row.quoteNumber && row.quoteNumber !== '-' ? `<div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace; margin-top: 2px;">${t.refLabel} ${row.quoteNumber}</div>` : '';
+            if (row.expiration && row.expiration !== '-') refHtml += `<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">${t.lblExpDate}: ${row.expiration}</div>`;
             let typeBadgeClass = row.rateType === 'Volume' ? 'badge-vol' : 'badge-ltl';
-            let typeText = row.rateType === 'Volume' ? t.rateVol : t.rateLTL;
+            let typeText = row.rateType === 'Expedited' ? t.rateExpedited : row.rateType === 'Volume' ? t.rateVol : t.rateLTL;
             let rateTypeHtml = `<span class="badge badge-rate-chip ${typeBadgeClass}" style="font-size: 0.6rem;">${typeText}</span>`;
 
             let priceHtml = `$${row.cost.toFixed(2)}`;
@@ -1311,7 +1446,6 @@ function renderTable() {
             }
 
             let internalCostHtml = '';
-            let internalExpHtml = '';
 
             if (showInternalCols) {
                 if (exportCarrierCost || exportMargin) {
@@ -1320,20 +1454,24 @@ function renderTable() {
                     if (exportMargin) internalCostHtml += `<div style="margin-top:2px;">Margin: <span style="font-weight:bold; color:var(--text);">${row.margin || '-'}</span></div>`;
                     internalCostHtml += `</td>`;
                 }
-                internalExpHtml = `<td style="color:var(--text-muted); font-size: 0.85rem;">${row.expiration || '-'}</td>`;
             }
 
             const tr = document.createElement('tr');
             if (!row.isAllowed) tr.classList.add('disabled-row');
             if (row.isSelected === false) tr.classList.add('excluded-row');
 
-            tr.innerHTML = `<td style="white-space: nowrap;"><div style="display: inline-block; vertical-align: middle;"><input type="checkbox" ${row.isSelected !== false ? 'checked' : ''} onchange="toggleCarrierSelection(this, ${appQuotes.indexOf(q)}, '${row.id}')" style="vertical-align: middle; margin-right: 6px; cursor: pointer;" title="Include in export">${iconHtml}<span class="carrier-name" style="vertical-align: middle;">${row.normalizedName}</span>${rateTypeHtml}</div>${refHtml}</td><td class="price" style="${!row.isAllowed ? 'color:var(--text-muted);' : ''}">${priceHtml}</td>${showInternalCols && (exportCarrierCost || exportMargin) ? internalCostHtml : (showInternalCols ? '<td>-</td>' : '')}<td>${liabilityHtml}</td><td><div class="transit">${daysText}</div><div style="color:var(--text-muted); font-size: 0.75rem; line-height:1.1;">${row.service}</div></td>${showInternalCols ? internalExpHtml : ''}<td><span class="badge ${row.statusClass}">${row.statusText}</span>${htmlNotes}</td>`;
+            tr.innerHTML = `<td style="white-space: nowrap;"><div style="display: inline-block; vertical-align: middle;"><input type="checkbox" ${row.isSelected !== false ? 'checked' : ''} onchange="toggleCarrierSelection(this, ${appQuotes.indexOf(q)}, '${row.id}')" style="vertical-align: middle; margin-right: 6px; cursor: pointer;" title="Include in export">${iconHtml}${/^priority1(?:\s*-\s*expedited truckload)?$/i.test(row.normalizedName) ? getExpeditedCarrierHtml('var(--text)', 'var(--text-muted)') : `<span class="carrier-name" style="vertical-align: middle;">${row.normalizedName}</span>${rateTypeHtml}`}</div>${refHtml}</td><td class="price" style="${!row.isAllowed ? 'color:var(--text-muted);' : ''}">${priceHtml}</td>${showInternalCols && (exportCarrierCost || exportMargin) ? internalCostHtml : ''}<td>${liabilityHtml}</td><td><div class="transit">${daysText}</div><div style="color:var(--text-muted); font-size: 0.75rem; line-height:1.1;">${row.service}</div></td><td><span class="badge ${row.statusClass}">${row.statusText}</span>${htmlNotes}</td>`;
             tbody.appendChild(tr);
         };
 
         if (separateRateTypes) {
-            const ltlRows = q.processedRates.filter(row => row.rateType !== 'Volume');
+            const ltlRows = q.processedRates.filter(row => row.rateType !== 'Volume' && row.rateType !== 'Expedited');
             const volumeRows = q.processedRates.filter(row => row.rateType === 'Volume');
+            const expeditedRows = q.processedRates.filter(row => row.rateType === 'Expedited');
+            if (expeditedRows.length) {
+                appendSubgroupHeader(t.rateExpedited);
+                expeditedRows.forEach(renderRateRow);
+            }
             if (ltlRows.length > 0) {
                 appendSubgroupHeader(t.rateLTL);
                 ltlRows.forEach(renderRateRow);
@@ -1483,7 +1621,6 @@ function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
         let thHTML = `<th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; width: 35%; color: ${th.thText};">${t.thCarrier}</th><th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; width: 25%; color: ${th.thText};">${t.thRate}</th>`;
         if (hasInternalCols && (exportCarrierCost || exportMargin)) thHTML += `<th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">${exportCarrierCost ? t.lblCarrierCost : ''} ${exportCarrierCost && exportMargin ? '/' : ''} ${exportMargin ? t.lblMargin : ''}</th>`;
         thHTML += `<th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; width: 20%; color: ${th.thText};">${t.thLiability}</th><th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; width: 20%; color: ${th.thText};">${isPdf ? t.thTransit : t.thEmailTransit}</th>`;
-        if (hasInternalCols) thHTML += `<th style="border: 1px solid ${th.border}; padding: 10px; background-color: ${th.thBg}; font-weight: bold; color: ${th.thText};">${t.lblExpDate}</th>`;
 
         const renderTableBlock = (ratesToRender, title) => {
             if (ratesToRender.length === 0) return '';
@@ -1503,9 +1640,10 @@ function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
                     } else liabilityHtml = `<span style="font-size: 12px; color: ${th.text}; font-family: monospace;">${row.liability}</span>`;
                 }
 
-                let carrierExtra = row.quoteNumber !== '-' ? `<br><span style="font-size:10px; color:${th.textMuted};">${t.refLabel} ${row.quoteNumber}</span>` : '';
+                let carrierExtra = row.quoteNumber && row.quoteNumber !== '-' ? `<br><span style="font-size:10px; color:${th.textMuted};">${t.refLabel} ${row.quoteNumber}</span>` : '';
+                if (row.expiration && row.expiration !== '-') carrierExtra += `<br><span style="font-size:10px; color:${th.textMuted};">${t.lblExpDate}: ${row.expiration}</span>`;
                 const logoUrl = getCarrierLogo(row.normalizedName);
-                const iconHtml = logoUrl ? `<img src="${logoUrl}" style="width: 14px; height: 14px; object-fit: contain; vertical-align: middle; margin-right: 6px; border-radius: 2px; margin-bottom: 2px;" onerror="this.style.display='none'" alt="">` : '';
+                const iconHtml = /^priority1(?:\s*-\s*expedited truckload)?$/i.test(row.normalizedName) ? '' : logoUrl ? `<img src="${logoUrl}" style="width: 14px; height: 14px; object-fit: contain; vertical-align: middle; margin-right: 6px; border-radius: 2px; margin-bottom: 2px;" onerror="this.style.display='none'" alt="">` : '';
 
                 let rateHtml = `$${row.cost.toFixed(2)}`;
                 if (insVal > 0) {
@@ -1513,7 +1651,7 @@ function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
                     rateHtml += `<br><strong style="font-size: 13px; color: ${th.text};">${t.lblTotal}: $${(row.cost + insVal).toFixed(2)}</strong>`;
                 }
 
-                let rowHTML = `<tr><td style="border: 1px solid ${th.border}; padding: 10px; color: ${th.text}; vertical-align: top; text-align: left;">${iconHtml}<strong style="vertical-align: middle;">${row.normalizedName}</strong>${carrierExtra}</td><td style="border: 1px solid ${th.border}; padding: 10px; color: ${th.primary}; font-weight: bold; font-size: 14px; vertical-align: top; text-align: left;">${rateHtml}</td>`;
+                let rowHTML = `<tr><td style="border: 1px solid ${th.border}; padding: 10px; color: ${th.text}; vertical-align: top; text-align: left;">${iconHtml}${/^priority1(?:\s*-\s*expedited truckload)?$/i.test(row.normalizedName) ? getExpeditedCarrierHtml(th.text, th.textMuted) : `<strong style="vertical-align: middle;">${row.normalizedName}</strong>`}${carrierExtra}</td><td style="border: 1px solid ${th.border}; padding: 10px; color: ${th.primary}; font-weight: bold; font-size: 14px; vertical-align: top; text-align: left;">${rateHtml}</td>`;
                 if (hasInternalCols && (exportCarrierCost || exportMargin)) {
                     rowHTML += `<td style="border: 1px solid ${th.border}; padding: 10px; color: ${th.textMuted}; vertical-align: top; font-size: 12px; text-align: left;">`;
                     if (exportCarrierCost) rowHTML += `<div>Cost: $${row.carrierCost || '-'}</div>`;
@@ -1521,7 +1659,6 @@ function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
                     rowHTML += `</td>`;
                 }
                 rowHTML += `<td style="border: 1px solid ${th.border}; padding: 10px; color: ${th.text}; vertical-align: top; text-align: left;">${liabilityHtml}</td><td style="border: 1px solid ${th.border}; padding: 10px; color: ${th.text}; vertical-align: top; text-align: left;"><div style="font-size: 13px;">${daysText}</div><div style="font-size: 11px; color: ${th.textMuted}; margin-top: 2px;">${row.service}</div></td>`;
-                if (hasInternalCols) rowHTML += `<td style="border: 1px solid ${th.border}; padding: 10px; color: ${th.textMuted}; vertical-align: top; font-size: 12px; text-align: left;">${row.expiration || '-'}</td>`;
                 rowHTML += `</tr>`;
                 blockHtml += rowHTML;
             });
@@ -1529,9 +1666,10 @@ function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
             return blockHtml;
         };
 
-        let ltlRates = allowedRates.filter(r => r.rateType !== 'Volume');
+        let ltlRates = allowedRates.filter(r => r.rateType !== 'Volume' && r.rateType !== 'Expedited');
         let volRates = allowedRates.filter(r => r.rateType === 'Volume');
         if (volRates.length > 0) hasVolume = true;
+        html += renderTableBlock(allowedRates.filter(r => r.rateType === 'Expedited'), 'Expedited Truckload Rates');
         html += renderTableBlock(ltlRates, 'LTL Rates');
         html += renderTableBlock(volRates, 'Volume Rates');
         html += `</div>`;
