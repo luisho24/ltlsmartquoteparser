@@ -1169,6 +1169,23 @@ function canonicalCarrierForRules(name) {
     return name;
 }
 
+function isBestBuyCarrierAllowed(name) {
+    const carrier = String(name || '').trim();
+    // Customer-provided destination list. Keep FedEx Economy and Priority distinct.
+    const codes = {
+        AACT: 'AAA Cooper', ABF: 'ABF', ABFS: 'ABF', CEVA: 'CEVA',
+        EXLA: 'Estes', FXNL: 'FedEx Economy', FXFE: 'FedEx Priority',
+        FWDN: 'Forward Air', XPOL: 'XPO', ODFL: 'Old Dominion',
+        RLCA: 'R&L Carriers', SLSN: 'Salson Logistics'
+    };
+    if (/\b(?:ANCF|TOTL)\b|best\s+yet|total\s+transportation/i.test(carrier)) return false;
+    if (Object.hasOwn(codes, carrier.toUpperCase())) return true;
+    const normalized = normalizeCarrierName(carrier);
+    return ['AAA Cooper', 'ABF', 'Estes', 'FedEx Economy', 'FedEx Priority',
+        'Forward Air', 'XPO', 'Old Dominion', 'R&L Carriers'].includes(normalized)
+        || /^(?:ceva(?: freight| logistics)?|salson(?: logistics)?)$/i.test(carrier);
+}
+
 function normalizePriority1Text(value) {
     return window.QuoteParserCore.normalizePriority1Text(value);
 }
@@ -1352,6 +1369,8 @@ function renderTable() {
             } else if (destType === 'walmart') {
                 if (!rules.walmart.allowed.includes(ruleName)) { isAllowed = false; statusText = t.statBanned + ' Walmart'; }
                 else if (rules.walmart.notes[ruleName]) infos.push(`Walmart: ${rules.walmart.notes[ruleName]}`);
+            } else if (destType === 'bestbuy') {
+                if (!isBestBuyCarrierAllowed(quote.carrier)) { isAllowed = false; statusText = t.statBanned + ' Best Buy'; }
             }
 
             if (prodType === 'vape') {
