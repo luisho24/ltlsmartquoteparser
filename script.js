@@ -1176,14 +1176,14 @@ function isBestBuyCarrierAllowed(name) {
         AACT: 'AAA Cooper', ABF: 'ABF', ABFS: 'ABF', CEVA: 'CEVA',
         EXLA: 'Estes', FXNL: 'FedEx Economy', FXFE: 'FedEx Priority',
         FWDN: 'Forward Air', XPOL: 'XPO', ODFL: 'Old Dominion',
-        RLCA: 'R&L Carriers', SLSN: 'Salson Logistics'
+        SLSN: 'Salson Logistics'
     };
     if (/\b(?:ANCF|TOTL)\b|best\s+yet|total\s+transportation/i.test(carrier)) return false;
     if (Object.hasOwn(codes, carrier.toUpperCase())) return true;
     const normalized = normalizeCarrierName(carrier);
     return ['AAA Cooper', 'ABF', 'Estes', 'FedEx Economy', 'FedEx Priority',
-        'Forward Air', 'XPO', 'Old Dominion', 'R&L Carriers'].includes(normalized)
-        || /^(?:ceva(?: freight| logistics)?|salson(?: logistics)?)$/i.test(carrier);
+        'Forward Air', 'XPO', 'Old Dominion'].includes(normalized)
+        || /^(?:ceva(?: freight| logistics)?|salson(?: logistics)?|fedex freight|FXNL\s*\/\s*FXFE)$/i.test(carrier);
 }
 
 function normalizePriority1Text(value) {
