@@ -6,9 +6,9 @@
             heading: 'Help improve Smart LTL', intro: 'Report an issue or suggest an improvement.',
             category: 'Feedback type', bug: 'Bug report', idea: 'Suggestion', other: 'Other',
             title: 'Short summary', message: 'What happened, or what would you change?',
-            steps: 'Steps to reproduce (optional)', email: 'Email for a reply (optional)',
+            steps: 'Steps to reproduce (optional)', email: 'Email for a reply (optional)', name: 'Your name (optional)',
             include: 'Include the current quote ID only', send: 'Send feedback', close: 'Close',
-            privacy: 'Do not include customer names, addresses, rates, passwords, or other sensitive details. We send only this form, your interface/language, and the quote ID if selected. Reports are kept for up to 90 days.',
+            privacy: 'Do not include customer names, addresses, rates, passwords, or other sensitive details. We send this form, your browser ID, interface/language, and the quote ID if selected. Your own name is optional. Reports are kept for up to 90 days.',
             limits: 'Up to 5 reports per hour and 15 per day per browser. Additional shared-network and service limits apply.',
             unavailable: 'The feedback service is not connected yet. Nothing has been sent.',
             sending: 'Sending…', failed: 'We could not confirm delivery. Your text is still here; please retry.',
@@ -21,9 +21,9 @@
             heading: 'Ayúdanos a mejorar Smart LTL', intro: 'Reporta un problema o sugiere una mejora.',
             category: 'Tipo de comentario', bug: 'Error', idea: 'Sugerencia', other: 'Otro',
             title: 'Resumen breve', message: '¿Qué ocurrió o qué cambiarías?',
-            steps: 'Pasos para reproducir (opcional)', email: 'Correo para responder (opcional)',
+            steps: 'Pasos para reproducir (opcional)', email: 'Correo para responder (opcional)', name: 'Tu nombre (opcional)',
             include: 'Incluir solo el ID de la cotización actual', send: 'Enviar comentario', close: 'Cerrar',
-            privacy: 'No incluyas nombres, direcciones, tarifas, contraseñas ni datos sensibles. Solo enviamos este formulario, la interfaz/idioma y el ID si lo seleccionas. Los reportes se conservan hasta 90 días.',
+            privacy: 'No incluyas nombres de clientes, direcciones, tarifas, contraseñas ni datos sensibles. Enviamos este formulario, el ID del navegador, la interfaz/idioma y la cotización si la seleccionas. Tu nombre es opcional. Los reportes se conservan hasta 90 días.',
             limits: 'Hasta 5 reportes por hora y 15 por día por navegador. También hay límites por red compartida y del servicio.',
             unavailable: 'El servicio de comentarios aún no está conectado. No se ha enviado nada.',
             sending: 'Enviando…', failed: 'No pudimos confirmar el envío. El texto sigue aquí; vuelve a intentarlo.',
@@ -47,6 +47,7 @@
         } catch { return null; }
     }
     function identity() {
+        if (window.LTLDevice) return window.LTLDevice.id();
         if (clientId) return clientId;
         try { clientId = localStorage.getItem('ltl-feedback-client-v1'); } catch { /* Storage unavailable. */ }
         if (!/^[a-f0-9]{32}$/.test(clientId || '')) {
@@ -85,6 +86,9 @@
         dialog.querySelectorAll('[data-feedback-copy]').forEach(el => { el.textContent = t[el.dataset.feedbackCopy]; });
         send.textContent = inflight ? t.sending : t.send;
         if (!endpoint()) { status.textContent = t.unavailable; send.disabled = true; }
+        if (window.LTLRemote?.feature('feedback') === false) { status.textContent = lang() === 'es' ? 'La recepción de feedback está desactivada.' : 'Feedback is currently disabled.'; send.disabled = true; }
+        const device = dialog.querySelector('.ltl-device-id');
+        if (device) device.textContent = (lang() === 'es' ? 'Dispositivo: ' : 'Device: ') + (window.LTLDevice?.displayId() || identity().slice(0, 12));
     }
     function create() {
         dialog = document.createElement('dialog'); dialog.id = 'ltlFeedback'; dialog.className = 'ltl-dialog';
@@ -96,7 +100,9 @@
             <label><span data-feedback-copy="title"></span><input name="title" required minlength="5" maxlength="120" autocomplete="off"></label>
             <label><span data-feedback-copy="message"></span><textarea name="message" required minlength="10" maxlength="3000" rows="4"></textarea></label>
             <details><summary data-feedback-copy="steps"></summary><textarea name="steps" maxlength="2000" rows="3" aria-label="Steps / Pasos"></textarea></details>
+            <label><span data-feedback-copy="name"></span><input name="name" maxlength="100" autocomplete="name"></label>
             <label><span data-feedback-copy="email"></span><input name="email" type="email" maxlength="254" autocomplete="email"></label>
+            <p class="ltl-small ltl-device-id"></p>
             <label class="ltl-check"><input name="includeQuote" type="checkbox"><span data-feedback-copy="include"></span></label>
             <div class="ltl-honeypot" aria-hidden="true"><label>Leave empty<input name="website" tabindex="-1" autocomplete="off"></label></div>
             <p class="ltl-small" data-feedback-copy="privacy"></p><p class="ltl-small" data-feedback-copy="limits"></p>
@@ -122,7 +128,7 @@
             const quoteId = values.get('includeQuote') && typeof appQuotes !== 'undefined' && /^\d{1,20}$/.test(appQuotes[0]?.id || '') ? String(appQuotes[0].id) : '';
             const data = await request('/v1/feedback', { clientId: identity(), token: token.token,
                 category: values.get('category'), title: values.get('title'), message: values.get('message'),
-                steps: values.get('steps'), email: values.get('email'), website: values.get('website'),
+                steps: values.get('steps'), email: values.get('email'), name: values.get('name'), website: values.get('website'),
                 interface: window.LTLInterface?.current || 'workspace', language: lang(), quoteId });
             if (!/^FB-[A-F0-9]{16}$/.test(data.id || '')) throw new Error('invalid_receipt');
             status.textContent = `${data.duplicate ? text().duplicate : text().success} ${data.id}`;
@@ -147,4 +153,5 @@
     window.closeBugReport = () => dialog?.close();
     window.openBugForm = open; // Retire the unrestricted external Google Form path in both UIs.
     window.LTLFeedback = { open };
+    document.addEventListener('ltl-device-ready', () => { if (dialog?.open) label(); });
 })();

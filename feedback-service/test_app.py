@@ -1,4 +1,5 @@
 import io
+import os
 import json
 import sqlite3
 import tempfile
@@ -59,7 +60,8 @@ class FeedbackTests(unittest.TestCase):
             payload = json.loads(db.execute('SELECT payload FROM feedback').fetchone()[0])
             self.assertNotIn('token', payload); self.assertNotIn('clientId', payload)
             self.assertEqual(payload['quoteId'], '')
-        self.assertEqual(Path(self.config.database).stat().st_mode & 0o777, 0o600)
+        if os.name != 'nt':  # Windows does not implement POSIX mode bits.
+            self.assertEqual(Path(self.config.database).stat().st_mode & 0o777, 0o600)
 
     def test_both_interfaces(self):
         for mode in ('classic', 'workspace'):

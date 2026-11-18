@@ -1,4 +1,5 @@
 function switchTab(tabId) {
+    if (tabId === 'extras' && globalThis.LTLRemote?.feature('referenceLibrary') === false) return;
     document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById('view-' + tabId).classList.add('active');
@@ -533,6 +534,9 @@ async function checkForUpdates() {
 }
 
 function getExpeditedLogoHtml() {
+    if (globalThis.LTLRemote?.feature('carrierLogos') === false) return '';
+    const managed = globalThis.LTLRemote?.carrier('Priority1 - Expedited Truckload');
+    if (managed?.logoUrl) return `<img src="${managed.logoUrl}" alt="Expedited" width="21" height="16" style="width:21px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">`;
     // PNG, HTML, and CSS share the same dimensions.
     return '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAQCAYAAAD52jQlAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIHSURBVDhPfZTNihNBFIW/hQjiC4ggbkTdKLoSXLjwFURxJyLuBMd5BRc+g4i4ElF0IepaFHEh7kx3ded3kplJnEkmCQyKkq57pa4hdnc6FlwSqFPfOXW7qpCEV9pn6h1jn/wr6TH2js8AWcy69NmXsqbBWFpsScTxoFsMSbmk31HtoNou1R4qCdekxyGfsq/bqLZy8+H/BPUxjwvQMHzEG91BxRlkUdpDfUInaLKIuzoqzpumgfoWmThOFaCScFY6iNYrFg1Ribhl5inb2i1pHKq7qK/xvAC1BRHPwuRS2gBJ6Zu546aZlI3rf9v3u8a5AvRXzElpM9NmxaIRmsWszcGt0JaltDuoj3hbgIbhIx5Vpu2gPmVPaxzMIq5a/8vGIe2mrb1YgGqNI9JgEr7qUpIR6h0PzNzxxQBl8MC0nwpQcRzVBtNVUEm4P4d+XQX1jo8FqI94Urn9DdTXGep7DkjKddOUgWH7odcRFxZATTgtbbJw7ipTxtwx44SN/3yo1/mQ+JgXlSm7dgG2giaLub3qAkgbEceZBVAizoctrjz8MTfMOGWw6vBLzNNcRpCYd5XXdNMa35xr1i1lWdO0azqTBicWwFnC5eBkSfOPSXhg9tCZ44oMOOzr/LAHpfzoTC3lw3zI0PiXMmDoHbv5kq79fggaSbgnfSY+LmmaVp2f3ziWZ/4BKtHtdqQ5mXAAAAAASUVORK5CYII=" alt="Expedited" width="21" height="16" style="width:21px; height:16px; min-width:21px; max-width:21px; min-height:16px; max-height:16px; vertical-align:middle; margin-right:6px; border:0; display:inline-block;">';
 }
@@ -544,6 +548,9 @@ function getExpeditedCarrierHtml(textColor, mutedColor) {
 }
 
 function getCarrierLogo(normalizedName) {
+    if (globalThis.LTLRemote?.feature('carrierLogos') === false) return '';
+    const managed = globalThis.LTLRemote?.carrier(normalizedName);
+    if (managed) return managed.logoUrl || '';
     const baseUrl = './logos/';
     const n = String(normalizedName || '').toLowerCase().trim().replace(/\s+/g, ' ');
     const iconMap = {
@@ -1119,6 +1126,8 @@ function clearAllDataInternal() {
 }
 
 function normalizeCarrierName(name) {
+    const managed = globalThis.LTLRemote?.carrier(name);
+    if (managed) return managed.name;
     let n = name.toLowerCase().trim();
     if (n.includes('fedex')) {
         if (n.includes('economy')) return 'FedEx Economy';
@@ -1363,7 +1372,11 @@ function renderTable() {
             const ruleName = canonicalCarrierForRules(normalizedName);
             let isAllowed = true; let warnings = []; let infos = []; let statusClass = 'badge-ok'; let statusText = t.statOk;
 
-            if (destType === 'amazon') {
+            const remoteAssessment = globalThis.LTLRemote?.assess(quote, destType);
+            if (remoteAssessment) {
+                if (!remoteAssessment.allowed) { isAllowed = false; statusText = remoteAssessment.reason; }
+                else if (remoteAssessment.note) infos.push(remoteAssessment.note);
+            } else if (destType === 'amazon') {
                 if (!rules.amazon.allowed.includes(ruleName)) { isAllowed = false; statusText = t.statBanned + ' Amazon'; }
                 else if (rules.amazon.notes[ruleName]) warnings.push(`Amazon: ${rules.amazon.notes[ruleName]}`);
             } else if (destType === 'walmart') {
@@ -1505,10 +1518,11 @@ function renderTable() {
     });
 
     document.getElementById('resultCount').innerText = t.resCount.replace('{0}', visibleCount);
+    globalThis.LTLRemote?.controls();
 }
 
 function getExportRatesForQuote(q, options) {
-    const baseRates = (q.processedRates || []).filter(r => r.isAllowed && r.isSelected !== false);
+    const baseRates = (q.processedRates || []).filter(r => r.isAllowed && r.isSelected !== false && globalThis.LTLRemote?.assess(r, q.destType)?.allowed !== false);
     if (options.cheapestOnly) return baseRates.slice(0, 1);
     if (options.useInlineLayout && options.includeSpreadsheetRates) return baseRates.slice(0, options.inlineRateCount);
     return baseRates;
@@ -1548,7 +1562,7 @@ function buildBatchInlineTable(targetQuotes, options, t, th) {
         for (let i = 0; i < maxRates; i++) {
             const rate = rates[i];
             if (rate) {
-                const insuranceValue = q.insurance || 0;
+                const insuranceValue = window.LTLRemote?.feature('insurance') === false ? 0 : (q.insurance || 0);
                 const totalValue = rate.cost + insuranceValue;
                 const optionDetails = insuranceValue > 0
                     ? `<div style="color: ${th.primary}; font-weight: bold;">Base: $${rate.cost.toFixed(2)}</div>
@@ -1575,6 +1589,8 @@ function buildBatchInlineTable(targetQuotes, options, t, th) {
 }
 
 function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
+    if (globalThis.LTLRemote?.feature('exportEmail') === false) return '';
+    if (targetQuotes.length > 1 && globalThis.LTLRemote?.feature('batchMode') === false) return '';
     const t = dict[currentLang];
     const isBatch = document.getElementById('batchMode').checked;
     let exportCarrierCost = document.getElementById('exportCarrierCost') ? document.getElementById('exportCarrierCost').checked : false;
@@ -1624,7 +1640,7 @@ function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
     targetQuotes.forEach(q => {
         let allowedRates = getExportRatesForQuote(q, batchExportOptions);
         if (allowedRates.length === 0) return;
-        let insVal = isBatch ? (q.insurance || 0) : (document.getElementById('insuranceInput') ? parseNumericInput(document.getElementById('insuranceInput').value) : 0);
+        let insVal = window.LTLRemote?.feature('insurance') === false ? 0 : (isBatch ? (q.insurance || 0) : (document.getElementById('insuranceInput') ? parseNumericInput(document.getElementById('insuranceInput').value) : 0));
         let itemsHtml = q.items.length > 0 ? q.items.map(i => i.isSub ? `<li style="list-style-type: none; font-size: 12px; color: ${th.textMuted}; margin-left: 12px; margin-top: 2px;">↳ ${i.text}</li>` : `<li style="margin-top: 4px;">${i.text}</li>`).join('') : '<li>N/A</li>';
         let counts = {}; q.accessorials.forEach(a => counts[a] = (counts[a] || 0) + 1);
         let accHtmlArray = Object.entries(counts).map(([a, c]) => c > 1 ? `${a} (x${c})` : a);
@@ -1700,6 +1716,7 @@ function getReportHTML(isPdf = false, targetQuotes = appQuotes) {
 }
 
 function openEmailPreview() {
+    if (globalThis.LTLRemote?.feature('exportEmail') === false) return;
     let quotesToRender = appQuotes;
     if (quotesToRender.length === 0) {
         quotesToRender = [{
@@ -1729,6 +1746,7 @@ function closeEmailPreview() { document.getElementById('emailPreviewModal').styl
 function copyForEmailFromPreview() { closeEmailPreview(); copyForEmail(); }
 
 async function copyForEmail() {
+    if (globalThis.LTLRemote?.feature('exportEmail') === false) return;
     if (appQuotes.length === 0) return;
     const t = dict[currentLang];
     const currentTheme = document.documentElement.getAttribute('data-theme');

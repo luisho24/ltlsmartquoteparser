@@ -202,7 +202,7 @@ class FeedbackApp:
             raise Problem(400, 'expired_or_invalid_challenge') from None
 
     def submit(self, data, origin, network, now):
-        allowed = {'clientId', 'token', 'website', 'category', 'title', 'message', 'steps', 'email', 'interface', 'language', 'quoteId'}
+        allowed = {'clientId', 'token', 'website', 'category', 'title', 'message', 'steps', 'email', 'name', 'interface', 'language', 'quoteId'}
         if set(data) - allowed:
             raise Problem(400, 'unknown_fields')
         client = self.client(data)
@@ -213,6 +213,8 @@ class FeedbackApp:
         payload = {k: self.text(data, k, lo, hi) for k, lo, hi in [
             ('category', 1, 20), ('title', 5, 120), ('message', 10, 3000), ('steps', 0, 2000),
             ('email', 0, 254), ('interface', 1, 20), ('language', 2, 2), ('quoteId', 0, 20)]}
+        if 'name' in data:
+            payload['name'] = self.text(data, 'name', 0, 100)
         if payload['category'] not in ('bug', 'idea', 'other') or payload['interface'] not in ('classic', 'workspace') or payload['language'] not in ('en', 'es'):
             raise Problem(400, 'invalid_choice')
         if payload['email'] and not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', payload['email']):

@@ -1,0 +1,764 @@
+{
+  "revision": 1,
+  "features": {
+    "feedback": true,
+    "expeditedRates": true,
+    "volumeRates": true,
+    "batchMode": true,
+    "exportEmail": true,
+    "referenceLibrary": true,
+    "insurance": true,
+    "carrierLogos": true
+  },
+  "filters": [
+    {
+      "id": "amazon",
+      "label": "Amazon FBA",
+      "enabled": true,
+      "allowed": [
+        "AAA Cooper",
+        "ABF",
+        "Central Transport",
+        "Estes",
+        "Frontline",
+        "Old Dominion",
+        "Saia",
+        "TForce",
+        "Unis",
+        "XPO"
+      ],
+      "blocked": [],
+      "notes": {
+        "Estes": "Verify local terminal. Some do not deliver to Amazon.",
+        "Frontline": "Applies $200 extra charge for limited access.",
+        "Saia": "Applies $175 extra charge for limited access."
+      }
+    },
+    {
+      "id": "walmart",
+      "label": "Walmart DC",
+      "enabled": true,
+      "allowed": [
+        "A. Duie Pyle",
+        "AAA Cooper",
+        "ABF",
+        "Averitt Express",
+        "Central Transport",
+        "Custom Companies",
+        "Daylight",
+        "Estes",
+        "FedEx",
+        "Forward Air",
+        "N&M Transfer",
+        "Old Dominion",
+        "R&L Carriers",
+        "Roadrunner",
+        "Saia",
+        "Southeastern Freight",
+        "TForce",
+        "Unis",
+        "Ward",
+        "XPO"
+      ],
+      "blocked": [],
+      "notes": {
+        "AAA Cooper": "Email walmartcsr@aaacooper.com.",
+        "Daylight": "Mandatory to confirm with delivery terminal.",
+        "R&L Carriers": "Mandatory to confirm with delivery terminal.",
+        "Saia": "Mandatory to confirm with delivery terminal.",
+        "Southeastern Freight": "Mandatory to confirm with delivery terminal."
+      }
+    },
+    {
+      "id": "bestbuy",
+      "label": "Best Buy",
+      "enabled": true,
+      "allowed": [
+        "AACT",
+        "ABF",
+        "ABFS",
+        "CEVA",
+        "EXLA",
+        "FXNL",
+        "FXFE",
+        "FWDN",
+        "XPOL",
+        "ODFL",
+        "SLSN",
+        "AAA Cooper",
+        "ABF Freight",
+        "CEVA Freight",
+        "CEVA Logistics",
+        "Estes",
+        "Estes Express",
+        "FedEx Freight",
+        "FedEx Economy",
+        "FedEx Priority",
+        "Forward Air",
+        "Forward",
+        "XPO",
+        "XPO Logistics",
+        "Old Dominion",
+        "Old Dominion Freight Line",
+        "Old Dominion Freight Lines",
+        "SalSon Logistics"
+      ],
+      "blocked": [
+        "ANCF",
+        "BEST YET",
+        "TOTL",
+        "RLCA",
+        "R&L Carriers"
+      ],
+      "notes": {}
+    }
+  ],
+  "carriers": [
+    {
+      "id": "carrier-1",
+      "name": "Priority1 - Expedited Truckload",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/expedited-arrows.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-2",
+      "name": "Priority1",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/priority1.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-3",
+      "name": "AAA Cooper",
+      "aliases": [
+        "AACT",
+        "AAA Cooper Transportation"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/aaa-cooper.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-4",
+      "name": "ABF",
+      "aliases": [
+        "abf freight",
+        "ABFS"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/abf.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-6",
+      "name": "Aberdeen express",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/aberdeen-express.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-7",
+      "name": "A. Duie Pyle",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/a-duie-pyle.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-8",
+      "name": "A & B Freight Line",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/a-b-freight-line.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-9",
+      "name": "Accurate cargo",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/accurate-transport.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-10",
+      "name": "Accurate transport",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/accurate-transport.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-11",
+      "name": "Averitt Express",
+      "aliases": [
+        "averitt"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/averitt.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-13",
+      "name": "Central Transport",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/central-transport.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-14",
+      "name": "CEVA Logistics",
+      "aliases": [
+        "ceva",
+        "ceva freight"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/ceva-logistics.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-17",
+      "name": "Cross country",
+      "aliases": [
+        "Cross country freight solutions",
+        "CrossCountry Freight Solutions"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/cross-country-freight-solutions.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-19",
+      "name": "Custom Companies",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/custom-companies.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-20",
+      "name": "Daylight",
+      "aliases": [
+        "Daylight transport"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/daylight-transport.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-22",
+      "name": "Dayton Freight",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/dayton-freight-lines.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-23",
+      "name": "Dohrn Transfer",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/dohrn-transfer.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-24",
+      "name": "Double D Express",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/double-d-express.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-25",
+      "name": "Dugan",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/dugan-truck-line.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-26",
+      "name": "Estes",
+      "aliases": [
+        "EXLA",
+        "Estes Express"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/estes.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-27",
+      "name": "FedEx",
+      "aliases": [
+        "FedEx Freight"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/fedex-priority.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-28",
+      "name": "FedEx Economy",
+      "aliases": [
+        "FXNL"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/fedex-economy.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-29",
+      "name": "FedEx Priority",
+      "aliases": [
+        "FXFE"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/fedex-priority.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-30",
+      "name": "Forward Air",
+      "aliases": [
+        "forward",
+        "FWDN"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/forward.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-32",
+      "name": "Frontline",
+      "aliases": [
+        "Frontline freight"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/frontline-freight.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-34",
+      "name": "Fort Transportation",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/fort-transportation.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-35",
+      "name": "Go2 Logistics",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/go2-logistics.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-36",
+      "name": "Magnum",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/magnum.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-37",
+      "name": "N&M Transfer",
+      "aliases": [
+        "Nm transfer"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/n-m-transfer.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-39",
+      "name": "Oak Harbor Freight Lines",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/oak-harbor-freight.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-40",
+      "name": "Old Dominion",
+      "aliases": [
+        "old dominion freight line",
+        "ODFL",
+        "Old Dominion Freight Lines"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/old-dominion-freight-line.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-42",
+      "name": "Performance Freight",
+      "aliases": [
+        "performance freight systems"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/performance-freight-systems-inc.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-44",
+      "name": "Pitt Ohio",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/pitt-ohio.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-45",
+      "name": "R&L Carriers",
+      "aliases": [
+        "RLCA",
+        "R+l carriers",
+        "Rl carriers"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/r-l-carriers.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-48",
+      "name": "Roadrunner",
+      "aliases": [
+        "Roadrunner Transportation Systems"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/roadrunner-transportation-systems.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-49",
+      "name": "Rude Transportation",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/rude-transportation.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-50",
+      "name": "Saia",
+      "aliases": [
+        "saia ltl freight"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/saia.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-52",
+      "name": "Southeastern Freight",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/southeastern-freight.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-53",
+      "name": "Southwestern Motor Transport",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/southwestern-motor-transport.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-54",
+      "name": "Tax Airfreight",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/tax-airfreight.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-55",
+      "name": "TForce",
+      "aliases": [
+        "tforce freight"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/tforce-freight.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-57",
+      "name": "Total Transportation",
+      "aliases": [],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/total-transportation-distribution.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-58",
+      "name": "UNIS Transportation",
+      "aliases": [
+        "unis"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/unis-transportation.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-60",
+      "name": "Ward",
+      "aliases": [
+        "ward trucking"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/ward-trucking.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-62",
+      "name": "XPO",
+      "aliases": [
+        "XPOL",
+        "XPO Logistics"
+      ],
+      "logoUrl": "https://luisho24.github.io/ltlsmartquoteparser/logos/xpo.png",
+      "enabled": true
+    },
+    {
+      "id": "carrier-slsn",
+      "name": "SalSon Logistics",
+      "aliases": [
+        "SLSN"
+      ],
+      "logoUrl": "",
+      "enabled": true
+    }
+  ],
+  "rules": {
+    "amazon": {
+      "allowed": [
+        "AAA Cooper",
+        "ABF",
+        "Central Transport",
+        "Estes",
+        "Frontline",
+        "Old Dominion",
+        "Saia",
+        "TForce",
+        "Unis",
+        "XPO"
+      ],
+      "notes": {
+        "Estes": "Verify local terminal. Some do not deliver to Amazon.",
+        "Frontline": "Applies $200 extra charge for limited access.",
+        "Saia": "Applies $175 extra charge for limited access."
+      }
+    },
+    "walmart": {
+      "allowed": [
+        "A. Duie Pyle",
+        "AAA Cooper",
+        "ABF",
+        "Averitt Express",
+        "Central Transport",
+        "Custom Companies",
+        "Daylight",
+        "Estes",
+        "FedEx",
+        "Forward Air",
+        "N&M Transfer",
+        "Old Dominion",
+        "R&L Carriers",
+        "Roadrunner",
+        "Saia",
+        "Southeastern Freight",
+        "TForce",
+        "Unis",
+        "Ward",
+        "XPO"
+      ],
+      "notes": {
+        "AAA Cooper": "Email walmartcsr@aaacooper.com.",
+        "Daylight": "Mandatory to confirm with delivery terminal.",
+        "R&L Carriers": "Mandatory to confirm with delivery terminal.",
+        "Saia": "Mandatory to confirm with delivery terminal.",
+        "Southeastern Freight": "Mandatory to confirm with delivery terminal."
+      }
+    },
+    "tobacco": {
+      "banned": [
+        "Central Transport"
+      ],
+      "restricted": [
+        "UPS"
+      ],
+      "notes": {
+        "UPS": "Requires written authorization. No Cargo Claims Liability.",
+        "Dayton Freight": "Max coverage $5,000. $1.00/lb.",
+        "AAA Cooper": "Max coverage $50,000. $2.00/lb.",
+        "Estes": "Must be palletized & secured. Max liability $2.00/lb.",
+        "Saia": "Will haul tobacco, but NO vape products."
+      }
+    },
+    "alcohol": {
+      "notes": {
+        "ABF": "Add $58.05 for AL, CA, FL, GA, IL, KY, LA, MD, MS, MT, NV, NJ, OK, PA, TX.",
+        "Estes": "No 00110-00119 zips. Extra fees: $45 NJ, $15.75 AL/CA/FL/etc.",
+        "Dayton Freight": "NO alcohol in PA, WV or via partners.",
+        "R&L Carriers": "NO alcohol CA, IN, NH, NY, WV. Beer only in TX. +$39 NJ.",
+        "Saia": "NO NYC/Long Island. Yes PR. No hazmat.",
+        "Southeastern Freight": "No intrastate (TX to TX). No KY.",
+        "FedEx": "Shipper/Consignee must have license."
+      }
+    },
+    "vape": {
+      "allowed": [
+        "Aberdeen Express",
+        "Accurate Cargo",
+        "Clear Lane",
+        "Cross Country",
+        "Custom Companies",
+        "Dayton Freight",
+        "Double D Express",
+        "Dugan",
+        "Estes",
+        "NM Transfer",
+        "Numark",
+        "Old Dominion",
+        "Pitt Ohio",
+        "Saia",
+        "Tax Airfreight"
+      ],
+      "banned": [
+        "R&L Carriers",
+        "Forward Air",
+        "AAA Cooper",
+        "Total Transportation",
+        "Southwest Motor",
+        "XPO"
+      ],
+      "notes": {
+        "Clear Lane": "ONLY if empty and UN-charged.",
+        "Estes": "No residential/limited access. Hardware only, no e-juice.",
+        "Cross Country": "Requires Hazmat if batteries included."
+      }
+    },
+    "firearms": {
+      "allowed": [
+        "A. Duie Pyle",
+        "AAA Cooper",
+        "ABF",
+        "FedEx",
+        "Saia"
+      ],
+      "notes": {
+        "A. Duie Pyle": "Firearms: Only specific cases (coordinate with rep). Ammo: Class 1.4 usually accepted.",
+        "ABF": "Firearms: Licensed importers/dealers only. Ammo: Class 1.4 usually accepted.",
+        "FedEx": "Firearms: FFL holders/Gov only. Ammo: Class 1.4 usually accepted.",
+        "AAA Cooper": "Ammo: Class 1.4 usually accepted. Others not accepted.",
+        "Saia": "Ammo: Class 1.4 usually accepted. Others not accepted."
+      }
+    },
+    "liftgate": {
+      "limits": {
+        "AAA Cooper": {
+          "l": 72,
+          "w": 2000,
+          "note": "Max 2000 lbs, 72\" L"
+        },
+        "ABF": {
+          "l": 80,
+          "wid": 60,
+          "w": 3000,
+          "note": "Max 3000 lbs (80x60)"
+        },
+        "Averitt Express": {
+          "l": 80,
+          "wid": 60,
+          "w": 3000,
+          "note": "Max 3000 lbs (80x60)"
+        },
+        "Central Transport": {
+          "l": 60,
+          "wid": 60,
+          "h": 80,
+          "w": 2500,
+          "note": "Max 2500 lbs (60x60x80). > limits incur $75 fee."
+        },
+        "Custom Companies": {
+          "l": 68,
+          "wid": 40,
+          "h": 80,
+          "w": 1500,
+          "note": "Max 1500 lbs (68x40x80). Call to confirm overages."
+        },
+        "Daylight": {
+          "l": 60,
+          "wid": 48,
+          "w": 3200,
+          "note": "Max 3200 lbs (60x48 for 53ft)"
+        },
+        "Dayton Freight": {
+          "l": 80,
+          "wid": 60,
+          "w": 2000,
+          "note": "Max 2000 lbs (80x60)"
+        },
+        "Dohrn Transfer": {
+          "l": 80,
+          "wid": 60,
+          "w": 2500,
+          "note": "Max 2500 lbs (80x60)"
+        },
+        "Dugan": {
+          "l": 48,
+          "wid": 48,
+          "h": 72,
+          "w": 2500,
+          "note": "Max 2500 lbs (48x48x72)"
+        },
+        "Estes": {
+          "l": 84,
+          "wid": 48,
+          "h": 72,
+          "w": 2000,
+          "note": "Max 2000 lbs (84x48x72)"
+        },
+        "Forward Air": {
+          "l": 72,
+          "wid": 72,
+          "w": 2500,
+          "note": "Max 2500 lbs (72x72). Tall freight may need Two-Man."
+        },
+        "Frontline": {
+          "l": 50,
+          "wid": 40,
+          "h": 86,
+          "w": 1300,
+          "note": "Max 1300 lbs (50x40x86). Weight limit varies per terminal."
+        },
+        "Old Dominion": {
+          "l": 84,
+          "wid": 84,
+          "h": 52,
+          "w": 3300,
+          "note": "Max 3300 lbs (84x84x52). Must not be top heavy."
+        },
+        "R&L Carriers": {
+          "l": 60,
+          "wid": 48,
+          "w": 2000,
+          "warnL": 60,
+          "note": "Max 2000 lbs (60x48). Skids > 60\" L charge doubled. Confirm with terminal."
+        },
+        "Roadrunner": {
+          "l": 60,
+          "wid": 80,
+          "h": 90,
+          "w": 2000,
+          "note": "Max 2000 lbs (60\"L x 80\"W x 90\"H). > limits triggers $50 fee + storage!"
+        },
+        "Saia": {
+          "l": 79,
+          "wid": 60,
+          "w": 5000,
+          "note": "Max 5000 lbs (79x60)"
+        },
+        "Southeastern Freight": {
+          "l": 60,
+          "wid": 48,
+          "h": 72,
+          "w": 2500,
+          "resiW": 500,
+          "note": "Max 2500 lbs Comm / 500 lbs Resi (60x48x72)"
+        },
+        "Total Transportation": {
+          "l": 60,
+          "wid": 60,
+          "h": 85,
+          "w": 2500,
+          "note": "Max 2500 lbs (60x60x85)"
+        },
+        "Ward": {
+          "l": 60,
+          "wid": 60,
+          "w": 2000,
+          "note": "Max 2000 lbs (60x60)"
+        }
+      }
+    },
+    "cubic": {
+      "defaultNote": "Please check Cubic Capacity / Overlength rules tariff with this carrier.",
+      "notes": {
+        "A. Duie Pyle": "Overlength > 8' o 6'x6'. LF > 8'. Cubic > 750 cu' (< 6 PCF).",
+        "AAA Cooper": "Overlength > 8'. Cubic > 350 cu' (< 3 PCF) o 750 cu' (< 6 PCF).",
+        "ABF": "Overlength > 8' (96\").",
+        "Estes": "Overlength > 8' (96\"). Cubic > 750 cu' (< 6 PCF).",
+        "Old Dominion": "Overlength > 8'. Capacity Load Item 390: > 20' linear o > 20,000 lbs.",
+        "Saia": "Overlength > 8'. Cubic > 750 cu' (< 6 PCF).",
+        "TForce": "Overlength > 8'. LF > 20'. Cubic > 750 cu' (< 6 PCF).",
+        "XPO": "Overlength > 8'. Item 233: Cubic > 350 cu' (< 3 PCF) o 750 cu' (< 6 PCF)."
+      }
+    }
+  }
+}

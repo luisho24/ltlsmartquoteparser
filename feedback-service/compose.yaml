@@ -7,7 +7,7 @@ services:
     network_mode: host
     env_file: .env
     environment:
-      FEEDBACK_DB: /data/feedback.sqlite3
+      FEEDBACK_STATE: /data
       TRUSTED_PROXIES: 127.0.0.1/32
     volumes:
       - ./data:/data

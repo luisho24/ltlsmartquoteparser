@@ -1,16 +1,16 @@
-# Proposed hostname, NOT provisioned. Add a verified DNS record first.
-# Merge this independent site block into the HOST Caddy config; do not replace it.
-feedback.partspilot.lat {
-    @api path /v1/challenge /v1/feedback /healthz
-    handle @api {
-        request_body {
-            max_size 16KB
-        }
-        reverse_proxy 127.0.0.1:8787 {
-            header_up X-Forwarded-For {remote_host}
+# Alternative host deployment. Use your verified hostname and merge this site block.
+feedback.example.com {
+    tls {
+        issuer acme {
+            preferred_chains {
+                root_common_name "ISRG Root X1"
+            }
         }
     }
-    handle {
-        respond "Not found" 404
+    request_body {
+        max_size 200KB
+    }
+    reverse_proxy 127.0.0.1:8787 {
+        header_up X-Forwarded-For {remote_host}
     }
 }
