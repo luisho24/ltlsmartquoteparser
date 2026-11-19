@@ -167,4 +167,31 @@ class AdminTests(unittest.TestCase):
         self.assertEqual(self.request('/admin/api/logos', {'png': base64.b64encode(b'<svg/>').decode()}, 'POST')['status'], 400)
 
 
-if __name__ == '__main__': unittest.main()
+
+
+    def test_temporary_password_requires_change_and_rejects_old_password(self):
+        self.setup_owner()
+        with self.fb.connect() as db:
+            db.execute('INSERT INTO admin_password_resets VALUES (?)', ('test-owner',))
+        self.assertTrue(self.request('/admin/api/session')['body']['requiresPasswordChange'])
+        self.assertEqual(self.request('/admin/api/config')['status'], 403)
+        wrong = self.request('/admin/api/password', {'currentPassword': 'wrong-password-123', 'newPassword': 'new-test-password-456!'}, 'POST')
+        self.assertEqual(wrong['status'], 403)
+        self.assertEqual(self.request('/admin/api/password', {'currentPassword': 'test-only-password-123!', 'newPassword': 'new-test-password-456!'}, 'POST', csrf=False)['status'], 403)
+        changed = self.request('/admin/api/password', {'currentPassword': 'test-only-password-123!', 'newPassword': 'new-test-password-456!'}, 'POST')
+        self.assertEqual(changed['status'], 200, changed)
+        self.assertFalse(changed['body']['requiresPasswordChange'])
+        self.assertEqual(self.request('/admin/api/config')['status'], 200)
+        self.assertEqual(self.request('/admin/api/login', {'username': 'test-owner', 'password': 'test-only-password-123!'}, 'POST')['status'], 401)
+        self.assertEqual(self.request('/admin/api/login', {'username': 'test-owner', 'password': 'new-test-password-456!'}, 'POST')['status'], 200)
+
+    def test_password_change_invalidates_other_sessions(self):
+        self.setup_owner()
+        old_cookie = self.cookie
+        result = self.request('/admin/api/login', {'username': 'test-owner', 'password': 'test-only-password-123!'}, 'POST')
+        self.cookie = result['headers']['Set-Cookie'].split(';')[0]; self.csrf = result['body']['csrf']
+        changed = self.request('/admin/api/password', {'currentPassword': 'test-only-password-123!', 'newPassword': 'new-test-password-456!'}, 'POST')
+        self.assertEqual(changed['status'], 200)
+        self.assertEqual(self.request('/admin/api/session')['status'], 200)
+        self.cookie = old_cookie
+        self.assertEqual(self.request('/admin/api/session')['status'], 401)

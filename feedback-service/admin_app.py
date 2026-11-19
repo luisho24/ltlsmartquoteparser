@@ -22,6 +22,7 @@ STATUSES = ('new', 'reviewing', 'resolved', 'archived')
 FEATURES = ('feedback', 'expeditedRates', 'volumeRates', 'batchMode', 'exportEmail', 'referenceLibrary', 'insurance', 'carrierLogos')
 ADMIN_SCHEMA = '''
 CREATE TABLE IF NOT EXISTS administrators(username TEXT PRIMARY KEY, salt TEXT NOT NULL, password TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS admin_password_resets(username TEXT PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS admin_sessions(token TEXT PRIMARY KEY, username TEXT NOT NULL, expires REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS devices(id TEXT PRIMARY KEY, first_seen REAL NOT NULL, last_seen REAL NOT NULL, name TEXT NOT NULL DEFAULT '', enabled INTEGER NOT NULL DEFAULT 1);
 CREATE TABLE IF NOT EXISTS configuration(id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL, body TEXT NOT NULL);
@@ -231,7 +232,9 @@ class AdminApp:
             db.commit()
         if setup:
             self.bootstrap.unlink(missing_ok=True)
-        return {'username': username, 'csrf': self.fb.digest('csrf:' + token)}, [('Set-Cookie', '__Host-ltl-admin=' + token + '; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=28800')]
+        with self.fb.connect() as db:
+            must_change = bool(db.execute('SELECT 1 FROM admin_password_resets WHERE username=?', (username,)).fetchone())
+        return {'username': username, 'csrf': self.fb.digest('csrf:' + token), 'requiresPasswordChange': must_change}, [('Set-Cookie', '__Host-ltl-admin=' + token + '; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=28800')]
 
     def touch_device(self, data):
         identity = self.fb.client(data)
@@ -253,11 +256,41 @@ class AdminApp:
     def admin_api(self, env, path, method):
         actor, csrf, raw = self.session(env, method != 'GET')
         if path == '/admin/api/session' and method == 'GET':
-            return 200, {'username': actor, 'csrf': csrf}, []
+            with self.fb.connect() as db:
+                must_change = bool(db.execute('SELECT 1 FROM admin_password_resets WHERE username=?', (actor,)).fetchone())
+            return 200, {'username': actor, 'csrf': csrf, 'requiresPasswordChange': must_change}, []
         if path == '/admin/api/logout' and method == 'POST':
             with self.fb.connect() as db:
                 db.execute('DELETE FROM admin_sessions WHERE token=?', (self.fb.digest('session:' + raw),))
             return 200, {'ok': True}, [('Set-Cookie', '__Host-ltl-admin=; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=0')]
+        if path == '/admin/api/password' and method == 'POST':
+            network, now = self.fb.network(env), self.clock()
+            self.fb.request_budget(network, now)
+            with self.fb.connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                self.fb.quota(db, 'password_change', now, 900, 10, 'network', network)
+                db.execute('INSERT INTO events VALUES (?,?,?,?)', (now, 'password_change', network, ''))
+                db.commit()
+            data = self.read(env, 4096)
+            current = clean_text(data.get('currentPassword', ''), 200, 12)
+            new = clean_text(data.get('newPassword', ''), 200, 12)
+            if hmac.compare_digest(current, new):
+                raise Problem(400, 'password_must_change')
+            with self.fb.connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                row = db.execute('SELECT salt,password FROM administrators WHERE username=?', (actor,)).fetchone()
+                if not row or not hmac.compare_digest(self.password(current, row[0]), row[1]):
+                    raise Problem(403, 'current_password_incorrect')
+                salt = secrets.token_hex(16)
+                db.execute('UPDATE administrators SET salt=?,password=? WHERE username=?', (salt, self.password(new, salt), actor))
+                db.execute('DELETE FROM admin_password_resets WHERE username=?', (actor,))
+                db.execute('DELETE FROM admin_sessions WHERE username=? AND token<>?', (actor, self.fb.digest('session:' + raw)))
+                self.audit(db, actor, 'password.changed', actor)
+                db.commit()
+            return 200, {'username': actor, 'csrf': csrf, 'requiresPasswordChange': False}, []
+        with self.fb.connect() as db:
+            if db.execute('SELECT 1 FROM admin_password_resets WHERE username=?', (actor,)).fetchone():
+                raise Problem(403, 'password_change_required')
         if path == '/admin/api/config' and method == 'GET':
             return 200, self.config(), []
         if path == '/admin/api/logos' and method == 'POST':
