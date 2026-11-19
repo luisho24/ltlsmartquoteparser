@@ -13,3 +13,5 @@
 }
 
 @media(max-width:600px){td>.status{justify-self:start}.topbar{height:70px}.shell{min-height:calc(100dvh - 70px)}}
+
+#admin-language{padding:6px;font-size:12px;min-height:36px;max-width:62px;background:white}@media(max-width:600px){.top-actions>a{display:none}.top-actions{gap:6px}.topbar{padding:0 12px}.brand{gap:8px}#admin-language{min-height:40px}}
